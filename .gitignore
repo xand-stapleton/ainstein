@@ -1,0 +1,6 @@
+.DS_Store
+tags
+__pycache__
+wandb
+runs
+.ipynb_checkpoints
