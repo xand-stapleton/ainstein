@@ -1,0 +1,132 @@
+### Hyperparameters for the AInstein metric training runs ###
+
+# Hyperparameter are sorted according to: Geometric, Data, Loss, Model,
+# Training, and Logging. Edit their values, restart kernels, and run the 
+# respective run.py or run_supervised.py files to train metrics.
+
+###############################################################################
+# Geometric set-up
+# Dimensionality of the data (e.g., 2 for 2D data)
+dim: 2
+
+# Set the number of patches (current functionality for 1 or 2)
+n_patches: 2
+
+# Einstein constant, $\lambda$, in Einstein eqn: $R_{ij} = \lambda g_{ij}$
+einstein_constant: 1.0
+
+# Patching size
+# ...determines the distance from the radial midpoint to the outer edge of the 
+# overlap region within the ball patches
+overlap_upperwidth: 0.1 
+
+###############################################################################
+# Data set-up
+# Sampling patch shape 
+# ...true => ball, false => cube (cube functionality limited)
+ball: true
+
+# The 1d size of the patch (radii for ball, width for cube) 
+patch_width: 1.
+
+# The \alpha factor in the sampling Beta function
+# ...values <1 skew to extremeties, >1 skew to radial midpoint
+density_power: 1.
+
+# Number of samples to generate for training
+num_samples: 100000
+
+###############################################################################
+# Loss set-up
+# Multiplier values for the loss contributions
+einstein_multiplier: 1.0
+overlap_multiplier: 10.0   
+finiteness_multiplier: 1.0  
+
+# Finiteness filter hyperparameters
+# Centre of the minimum
+finite_centre: 25 
+# Width of the minimum
+finite_width: 25 
+# Sharpness of the curve at the boundary of the minimum region
+finite_sharpness: 20 
+# Height of the "walls" around the minimum
+finite_height: 1000 
+# Slope of the lines which start at the top of the "walls"
+finite_slope: 0.2 
+
+###############################################################################
+# Model set-up
+# Import a saved model instead of initiating a new one (null means randomly initialise)
+saved_model: false
+saved_model_path: runs_supervised/supervised_model_identity2d.keras
+# ...the below are ignored if `saved_model` is true and a model is imported
+
+# Number of hidden units in each layer
+n_hidden: 64
+
+# Number of layers in the neural network
+n_layers: 3
+
+# Activation function to use in the neural network (e.g., gelu, relu)
+activations: gelu
+
+# Whether to use bias terms in the neural network layers
+use_bias: true
+
+# NN weight initialisation parameters
+weights_init_mean: 0
+weights_init_std: 0.0003
+
+# Seeds
+np_seed: null
+tf_seed: null
+
+###############################################################################
+# Training set-up
+# Number of training epochs
+epochs: 100
+
+# Batch size for training
+batch_size: 100
+
+# Learning rate for the optimizer
+init_learning_rate: 0.005
+min_learning_rate: 0.005
+
+# Validation hyperparameters
+validate: false
+val_print: false
+num_val_samples: 2000
+val_batch_size: 100
+
+# Verbosity level for print logging (e.g., 0 for silent, 1 for progress messages)
+verbosity: 1
+
+###############################################################################
+#Logging set-up
+# Enable or disable logging to Weights and Biases (WandB)
+log_wandb: false
+wandb_log_freq: 10
+
+# Whether to log interim results during training (best or scheduled). Setting
+# to false disables all file save logging
+log_interim: true
+
+# Directory where logs and other outputs will be saved
+log_dir: 'set_the_filepath_here'
+# Setting log_interval to null disables scheduled logging (but allows for best
+# loss tracking), else log each `log_interim` epochs
+log_interval: null
+# Track the best loss as training evolves?
+track_best: true
+# Save the historical best losses? Setting to false overwrites the previous
+# best loss for the run
+save_best_hist: false
+# Log batches and model when numerical errors occur?
+log_errors: true
+
+# Whether to print a breakdown of individual loss terms with each training step
+print_losses: false
+print_interval: 1   
+
