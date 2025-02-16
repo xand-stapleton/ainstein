@@ -85,7 +85,7 @@ class TotalLoss:
     ):
         # Set up the network inputs & outputs
         patch_inputs = [x_vars]
-        metric_pred = []
+        metric_preds = []
         if self.n_patches > 1:
             # Compute the input coordinates in the second patch
             patch_inputs.append(model.patch_transform_layer(x_vars))
@@ -94,29 +94,29 @@ class TotalLoss:
             patch_1_output, patch_2_output = tf.split(
                 metric_pred, num_or_size_splits=2, axis=-1
             )
-            metric_pred.append(patch_1_output)
-            metric_pred.append(patch_2_output)
+            metric_preds.append(patch_1_output)
+            metric_preds.append(patch_2_output)
         else:
-            metric_pred.append(metric_pred)
+            metric_preds.append(metric_pred)
 
         # Compute the loss components
         # Einstein
         if self.einstein_multiplier > 0.:
-            e_losses = [self.einstein_losses[patch_idx].compute(patch_inputs[patch_idx], metric_pred[patch_idx], model.patch_submodels[patch_idx]) for patch_idx in range(int(self.n_patches))]
+            e_losses = [self.einstein_losses[patch_idx].compute(patch_inputs[patch_idx], metric_preds[patch_idx], model.patch_submodels[patch_idx]) for patch_idx in range(int(self.n_patches))]
         else:
             e_losses = [tf.cast(0., tf.float64) for patch_idx in range(int(self.n_patches))]
            
         # Overlap
         if self.overlap_multiplier > 0. and self.n_patches == 2:
             overlap_loss = self.overlap_loss.compute(
-                x_vars, [metric_pred[0], metric_pred[1]]
+                x_vars, [metric_preds[0], metric_preds[1]]
             )
         else:
             overlap_loss = tf.cast(0., tf.float64)
               
         # Finiteness
         if self.finiteness_multiplier > 0.:
-            f_losses = [tf.math.log(self.finite_losses[patch_idx].compute(metric_pred[patch_idx])) for patch_idx in range(int(self.n_patches))]
+            f_losses = [tf.math.log(self.finite_losses[patch_idx].compute(metric_preds[patch_idx])) for patch_idx in range(int(self.n_patches))]
         else:
             f_losses = [tf.cast(0., tf.float64) for patch_idx in range(int(self.n_patches))]
             
@@ -234,10 +234,10 @@ class OverlapLoss:
         self.weight_radially = weight_radially
         self.overlap_upperwidth = overlap_upperwidth
 
-    def compute(self, x_vals, metric_pred):
+    def compute(self, x_vals, metric_preds):
         # Convert the outputs to metrics
-        patch_1_metric_pred = tf.map_fn(cholesky_from_vec, metric_pred[0])
-        patch_2_metric_pred = tf.map_fn(cholesky_from_vec, metric_pred[1])
+        patch_1_metric_pred = tf.map_fn(cholesky_from_vec, metric_preds[0])
+        patch_2_metric_pred = tf.map_fn(cholesky_from_vec, metric_preds[1])
 
         # Compute the patch changes of the both outputs
         patch_2_metrics_from_patch_1 = PatchChange_Metric_Ball(
@@ -415,7 +415,7 @@ class GlobalLoss:
     ):     
         # Set up the network inputs & outputs
         patch_inputs = [x_vars]
-        metric_pred = []
+        metric_preds = []
         if self.n_patches > 1:
             # Compute the input coordinates in the second patch
             patch_inputs.append(model.patch_transform_layer(x_vars))
@@ -424,10 +424,10 @@ class GlobalLoss:
             patch_1_output, patch_2_output = tf.split(
                 metric_pred, num_or_size_splits=2, axis=-1
             )
-            metric_pred.append(patch_1_output)
-            metric_pred.append(patch_2_output)
+            metric_preds.append(patch_1_output)
+            metric_preds.append(patch_2_output)
         else:
-            metric_pred.append(metric_pred)
+            metric_preds.append(metric_pred)
         
         #Compute data limited to each patch
         if self.radial_limit and self.radial_limit > 0:
@@ -435,16 +435,16 @@ class GlobalLoss:
             norms = [tf.sqrt(tf.reduce_sum(tf.square(p_pts), axis=1)) for p_pts in patch_inputs]
             masks = [norm < self.radial_limit for norm in norms] #...find points within the radial limit
             pts_limited = [tf.boolean_mask(patch_inputs[p_idx], masks[p_idx]) for p_idx in range(int(self.n_patches))]
-            metrics_limited = [tf.boolean_mask(metric_pred[p_idx], masks[p_idx]) for p_idx in range(int(self.n_patches))]
+            metrics_limited = [tf.boolean_mask(metric_preds[p_idx], masks[p_idx]) for p_idx in range(int(self.n_patches))]
 
             # Overlap Region
             mask_overlap = tf.logical_and(norms[0] >= (1 - self.radial_limit) / (1 + self.radial_limit), 
                                           norms[0] <= self.radial_limit) #...find points within the overlap region
             pts_overlap = tf.boolean_mask(patch_inputs[0], mask_overlap)
-            metrics_overlap = [tf.boolean_mask(metric_pred[p_idx], mask_overlap) for p_idx in range(int(self.n_patches))]
+            metrics_overlap = [tf.boolean_mask(metric_preds[p_idx], mask_overlap) for p_idx in range(int(self.n_patches))]
         else:
             #...otherwise use the full patches in each case
-            pts_limited, metrics_limited, pts_overlap, metrics_overlap = patch_inputs, metric_pred, patch_inputs[0], metric_pred
+            pts_limited, metrics_limited, pts_overlap, metrics_overlap = patch_inputs, metric_preds, patch_inputs[0], metric_preds
                         
         # Compute the number of points in each region
         sample_sizes = [[p_pts.shape[0] for p_pts in pts_limited], pts_overlap.shape[0]]

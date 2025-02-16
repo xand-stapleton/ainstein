@@ -34,7 +34,7 @@ patch_width: 1.
 density_power: 1.
 
 # Number of samples to generate for training
-num_samples: 100000
+num_samples: 10000
 
 ###############################################################################
 # Loss set-up
@@ -58,8 +58,8 @@ finite_slope: 0.2
 ###############################################################################
 # Model set-up
 # Import a saved model instead of initiating a new one (null means randomly initialise)
-saved_model: false
-saved_model_path: runs_supervised/supervised_model_identity2d.keras
+saved_model: true
+saved_model_path: runs_supervised/supervised_model_identity2d2p.keras
 # ...the below are ignored if `saved_model` is true and a model is imported
 
 # Number of hidden units in each layer

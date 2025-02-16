@@ -67,14 +67,14 @@ def main(hyperparameters_file, runtime_args, wandb_id=None):
             train_sample = BallSample(
                 hp.num_samples,
                 dimension=hp.dim,
-                radii_hi_pt=hp["patch_width"],
+                patch_width=hp["patch_width"],
                 density_power=hp["density_power"],
             )
             if hp["validate"]:
                 val_sample = BallSample(
                     hp.num_val_samples,
                     dimension=hp.dim,
-                    radii_hi_pt=hp["patch_width"],
+                    patch_width=hp["patch_width"],
                     density_power=hp["density_power"],
                 )
         # Cube patch sampling (full functionality unlikely enitrely compatible at present)

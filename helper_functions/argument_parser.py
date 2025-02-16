@@ -9,7 +9,7 @@ def get_args():
     parser.add_argument(
         "--hyperparams",
         type=str,
-        default="hyperparameters/patch.yaml",
+        default="hyperparameters/hps.yaml",
         help="Path to the hyperparameters YAML file (default: hyperparameters/patch.yaml)",
     )
 

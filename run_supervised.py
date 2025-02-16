@@ -13,7 +13,7 @@ def main(identity_bool=False):
     ###########################################################################
     ### Training set-up ###
     # Load the hyperparameters YAML file
-    with open("hyperparameters/patch.yaml", "r") as file:
+    with open("hyperparameters/hps.yaml", "r") as file:
         hp = yaml.safe_load(file)
 
     ###########################################################################
@@ -24,14 +24,14 @@ def main(identity_bool=False):
         train_sample = BallSample(
             hp["num_samples"],
             dimension=hp["dim"],
-            radii_hi_pt=hp["patch_width"],
+            patch_width=hp["patch_width"],
             density_power=hp["density_power"],
         )
         if hp["validate"]:
             val_sample = BallSample(
                 hp["num_val_samples"],
                 dimension=hp["dim"],
-                radii_hi_pt=hp["patch_width"],
+                patch_width=hp["patch_width"],
                 density_power=hp["density_power"],
             )
     # Cube patch sampling
@@ -145,7 +145,7 @@ def main(identity_bool=False):
 ###############################################################################
 if __name__ == "__main__":
     # Supervised run hyperparameters
-    identity_bool = False #...select whether to train against the identity function metric (True) or round metric (False)
+    identity_bool = True  #...select whether to train against the identity function metric (True) or round metric (False)
     save = True           #...whether to save the trained supervised model
     save_flag = 'test'    #...the filename extension for the trained supervised model
 
