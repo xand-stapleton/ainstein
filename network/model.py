@@ -21,7 +21,6 @@ class PatchSubModel(tf.keras.Model):
     Attributes:
     - hp (dict): Dictionary of the training hyperparameters.
     - serializable_hp (dict): Dictionary of the training hyperparameters which can be saved with the model.
-    - set_serializable_hp (): ...
     - dim (int): Number of dimensions of the manifold.
     - n_layers (int): The number of layers in the neural network model.
     - n_hidden (int): The number of neurons in each neural network layer.
