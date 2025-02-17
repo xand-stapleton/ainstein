@@ -74,10 +74,6 @@ activations: gelu
 # Whether to use bias terms in the neural network layers
 use_bias: true
 
-# NN weight initialisation parameters
-weights_init_mean: 0
-weights_init_std: 0.0003
-
 # Seeds
 np_seed: null
 tf_seed: null
@@ -114,7 +110,7 @@ wandb_log_freq: 10
 log_interim: true
 
 # Directory where logs and other outputs will be saved
-log_dir: 'set_the_filepath_here'
+log_dir: 'runs' #...set_the_filepath_here
 # Setting log_interval to null disables scheduled logging (but allows for best
 # loss tracking), else log each `log_interim` epochs
 log_interval: null
