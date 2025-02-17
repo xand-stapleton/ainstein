@@ -36,8 +36,8 @@ def BallSample(
     """
 
     # Sample the radii (using a beta distribution, centred on radial midpoint and symmetrised between the patches)
-    radii_p1 = np.random.beta(density_power, density_power/np.sqrt(3-2*np.sqrt(2))-density_power, size=int(num_pts/2)) 
-    radii_p2 = np.random.beta(density_power, density_power/np.sqrt(3-2*np.sqrt(2))-density_power, size=int(num_pts/2)) 
+    radii_p1 = np.random.beta(density_power, density_power/(np.sqrt(2.)-1.)-density_power, size=int(num_pts/2)) 
+    radii_p2 = np.random.beta(density_power, density_power/(np.sqrt(2.)-1.)-density_power, size=int(num_pts/2)) 
     radii_p2_inp1 = (1 - radii_p2) / (1 + radii_p2)
     radii = np.concatenate((radii_p1, radii_p2_inp1))
     

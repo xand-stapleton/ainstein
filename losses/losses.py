@@ -192,7 +192,7 @@ class EinsteinLoss:
         
         # Apply radial weighting
         if self.weight_radially:
-            radial_midpoint = tf.cast(tf.sqrt(3. - 2 * tf.sqrt(2.)), tf.float64)
+            radial_midpoint = tf.cast(tf.sqrt(2.)-1., tf.float64)
             filter_width = radial_midpoint + self.overlap_upperwidth
             radial_weights = RadiusWeighting(x_vars, filter_width)
             norm = norm * radial_weights
@@ -256,7 +256,7 @@ class OverlapLoss:
             
         # Apply radial weighting
         if self.weight_radially:
-            radial_midpoint = tf.cast(tf.sqrt(3. - 2 * tf.sqrt(2.)), tf.float64)
+            radial_midpoint = tf.cast(tf.sqrt(2.) - 1., tf.float64)
             filter_lower_bound = (1 - (radial_midpoint + self.overlap_upperwidth)) / (1 + (radial_midpoint + self.overlap_upperwidth))
             filter_midpoint = ((radial_midpoint + self.overlap_upperwidth) + filter_lower_bound) / 2.
             filter_width = radial_midpoint + self.overlap_upperwidth - filter_midpoint
@@ -384,7 +384,7 @@ class GlobalLoss:
         self.num_dimensions = self.hp["dim"]
         self.n_patches = self.hp["n_patches"]
         self.radial_limit = radial_limit
-        self.radial_midpoint = tf.cast(tf.sqrt(3. - 2 * tf.sqrt(2.)), tf.float64)
+        self.radial_midpoint = tf.cast(tf.sqrt(2.) - 1., tf.float64)
         # Ensure the patching conditions are consistently defined
         if self.radial_limit:
             assert self.radial_limit > self.radial_midpoint, "Patches do not overlap..."
