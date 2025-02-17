@@ -9,12 +9,12 @@ We recommend setting up a new environemnt for running of this package, the proce
 To run from the command line, enter the local directory of this package, ensure the environment is activated, set the run hyperparameters in `hyperparameters/hps.yaml`, and run the following code:  
 ### If using Weights & Biases:
 ```
-python3 run.py --hyperparameters=hyperparameters/hps.yaml
+python3 run.py --hyperparams=hyperparameters/hps.yaml
 ```
 ### ...otherwise:
 ```
 wandb disabled
-python3 run.py --hyperparameters=hyperparameters/hps.yaml
+python3 run.py --hyperparams=hyperparameters/hps.yaml
 ```
 
 ## Functionality
