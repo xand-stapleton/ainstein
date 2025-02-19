@@ -24,6 +24,15 @@ A jupyter notebook `examine_output.ipynb` is provided which provides the testing
   
 ## BibTeX Citation  
 ``` 
-raise NotImplementedError()  
+@article{Hirst:2025seh,
+    author = "Hirst, Edward and Gherardini, Tancredi Schettini and Stapleton, Alexander G.",
+    title = "{AInstein: Numerical Einstein Metrics via Machine Learning}",
+    eprint = "2502.13043",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-th",
+    reportNumber = "QMUL-PH-25-04",
+    month = "2",
+    year = "2025"
+}
 ```
 
