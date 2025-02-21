@@ -3,7 +3,7 @@ This repository contains code for learning Einstein metrics ($R_{ij} = \lambda g
   
 The semi-supervised learning is run via the file `run.py`, where manifold properties and training hyperparameters are set using the `hyperparameters/hps.yaml` file. To instead train a supervised model (to either the identity function or the round metric) run the file `run_supervised.py`, which uses hyperparameters from the same yaml file.  
 
-We recommend setting up a new environemnt for running of this package, the process for this is described in `environment/README.md`.  
+We recommend setting up a new environment for running of this package, the process for this is described in `environment/README.md`.  
 
 ## Running from the command line  
 To run from the command line, enter the local directory of this package, ensure the environment is activated, set the run hyperparameters in `hyperparameters/hps.yaml`, and run the following code:  
