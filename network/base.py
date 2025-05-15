@@ -1,20 +1,24 @@
 import tensorflow as tf
+
 tfk = tf.keras
 tfk.backend.set_floatx("float64")
 import signal
 import warnings
 from sys import exit
+
 import numpy as np
+
 import wandb
-from geometry.geometry import PatchChange_Coordinates_Ball, PatchChange_Metric_Ball
 from helper_functions import helper_functions
-from losses.losses import TotalLoss
+from losses.ball import TotalBallLoss
 from network import network_analysis, schedulers
+from keras.saving import register_keras_serializable
 
 
-class PatchSubModel(tf.keras.Model):
+@register_keras_serializable()
+class BasePatchSubmodel(tf.keras.Model):
     """
-    Represents a class for the neural network model which represents the metric 
+    Represents a class for the neural network model which represents the metric
     function in a patch, these are trained across the patches to satify the Einstein equation.
     Inherits from the tf.keras.Model class.
 
@@ -29,27 +33,28 @@ class PatchSubModel(tf.keras.Model):
     - submodel (tfk.Model): The neural network model for the metric function on the patch.
 
     Methods:
-    - __init__(self, hp, n_out): 
-      Initializes the PatchSubModel class with the respective model hyperparameters, 
+    - __init__(self, hp, n_out):
+      Initializes the PatchSubModel class with the respective model hyperparameters,
       initialising the neural network architecture for the metric function.
 
-    - call(self, inputs): 
+    - call(self, inputs):
       Computes the model-predicted metric components for input points on the patch.
-      
+
     - _is_serializable(self, value):
       Identify whether a given hyperparameter is serialisable, such that it can be saved with the model.
-      
+
     - set_serializable_hp(self):
       Set the hyperparameters to be saved with the model.
-      
+
     - get_config(self):
       Set up the model saving configuration to allow reloading.
-      
+
     - from_config(self, config)
       Extract the config to load the neural network model for the patch.
     """
+
     def __init__(self, hp, n_out, **kwargs):
-        super(PatchSubModel, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # Define hyperparameters
         self.hp = hp
         self.serializable_hp = None
@@ -67,9 +72,7 @@ class PatchSubModel(tf.keras.Model):
         )(inputs)
         for _ in range(self.n_layers - 2):
             x = tfk.layers.Dense(
-                self.n_hidden,
-                activation=self.activations,
-                use_bias=self.use_bias
+                self.n_hidden, activation=self.activations, use_bias=self.use_bias
             )(x)
         outputs = tfk.layers.Dense(n_out, activation=None, use_bias=False)(x)
 
@@ -92,7 +95,7 @@ class PatchSubModel(tf.keras.Model):
 
     def get_config(self):
         # Return the configuration necessary to recreate this model
-        config = super(GlobalModel, self).get_config()
+        config = super().get_config()
         config.update({"hp": self.serializable_hp, "n_out": self.n_out})
         return config
 
@@ -101,10 +104,11 @@ class PatchSubModel(tf.keras.Model):
         return cls(**config)
 
 
-class GlobalModel(tf.keras.Model):
+@register_keras_serializable()
+class BaseGlobalModel(tf.keras.Model):
     """
-    Represents a class for the global model of the metric function across the 
-    patches, these are trained to satify the Einstein equation. Inherits from 
+    Represents a class for the global model of the metric function across the
+    patches, these are trained to satify the Einstein equation. Inherits from
     the tf.keras.Model class.
 
     Attributes:
@@ -117,57 +121,34 @@ class GlobalModel(tf.keras.Model):
     - patch_transform_layer (tfk layer): Function which transforms the input data between patches. Used for transforming patch 1 to 2, but is symmetric for 2 to 1 also.
 
     Methods:
-    - __init__(self, hp): 
-      Initializes the GlobalModel class with the respective model hyperparameters, 
-      calling the PatchSubModel class to define the neural network architectures 
+    - __init__(self, hp):
+      Initializes the GlobalModel class with the respective model hyperparameters,
+      calling the PatchSubModel class to define the neural network architectures
       for the metric function in each patch.
 
-    - call(self, inputs): 
+    - call(self, inputs):
       Computes the model-predicted metric components for input points in each patch.
-      
+
     - _is_serializable(self, value):
       Identify whether a given hyperparameter is serialisable, such that it can be saved with the model.
-      
+
     - set_serializable_hp(self):
       Set the hyperparameters to be saved with the model.
-      
+
     - get_config(self):
       Set up the model saving configuration to allow reloading.
-      
+
     - from_config(self, config)
       Extract the config to load the neural network model for the patch.
     """
+
     def __init__(self, hp, **kwargs):
-        super(GlobalModel, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # Define hyperparameters
         self.hp = hp
         self.serializable_hp = None
         self.set_serializable_hp()
         self.dim = self.hp["dim"]
-        self.n_patches = self.hp["n_patches"]
-
-        # Compute the number of independent metric entries, this is the number 
-        # of vielbein entries used as the model outputs for each patch
-        n_out = int(0.5 * self.dim * (self.dim + 1))
-
-        # Define submodels for each patch
-        self.patch_submodels = [PatchSubModel(self.hp, n_out) for i in range(int(self.n_patches))]
-        if self.n_patches == 2:
-            self.patch_transform_layer = tfk.layers.Lambda(
-                PatchChange_Coordinates_Ball, dtype=tf.float64
-            )
-        elif self.n_patches > 2:
-            raise SystemExit("Codebase not yet configured for >2 patches...")
-
-    def call(self, inputs):
-        # Transform input data to all patches
-        patch_inputs = [inputs]
-        if self.n_patches > 1:
-            patch_inputs.append(self.patch_transform_layer(inputs))
-        # Compute the outputs for all patches
-        concatenated_output = tfk.layers.Concatenate()([self.patch_submodels[patch_idx](patch_inputs[patch_idx]) for patch_idx in range(int(self.n_patches))])
-        
-        return concatenated_output
 
     def _is_serializable(self, value):
         try:
@@ -183,7 +164,7 @@ class GlobalModel(tf.keras.Model):
 
     def get_config(self):
         # Return the configuration necessary to recreate this model
-        config = super(GlobalModel, self).get_config()
+        config = super().get_config()
         config.update({"hp": self.serializable_hp})
         return config
 
@@ -192,11 +173,11 @@ class GlobalModel(tf.keras.Model):
         return cls(**config)
 
 
-class Network:
+class BaseNetwork:
     """
-    Represents a class for the machine learning processes used in training the 
-    global metric function across the patches. This object contains the metric 
-    neural network models as an attribute subclass via GlobalModel, otherwise 
+    Represents a class for the machine learning processes used in training the
+    global metric function across the patches. This object contains the metric
+    neural network models as an attribute subclass via GlobalModel, otherwise
     containing functionality for training, validating, saving, logging.
 
     Attributes:
@@ -207,40 +188,41 @@ class Network:
     - loss (float): The training loss of the neural network model.
     - log_dir (str): The filepath for the models to be saved too.
     - optimiser (tfk.optimizers): The optimiser used for neural network training.
-    
+
     Methods:
-    - __init__(self, hp, print_losses, restore_hps): 
-      Initializes the Network class with the respective training hyperparameters, 
-      calling the GlobalModel class to define the neural network architectures 
-      for the metric function, allowing pre-trained model imports. Sets up the 
+    - __init__(self, hp, print_losses, restore_hps):
+      Initializes the Network class with the respective training hyperparameters,
+      calling the GlobalModel class to define the neural network architectures
+      for the metric function, allowing pre-trained model imports. Sets up the
       training loss, and the logging.
 
     - evaluate_loss(self, x, training=True, return_constituents, val_print):
-      Compute the model-predicted metric values for input points on the manifold 
+      Compute the model-predicted metric values for input points on the manifold
       (in patch 1 coordinates), and the respective training loss value.
-      
+
     - grad(self, x):
-      Compute the training loss gradient with respect to the neural network 
+      Compute the training loss gradient with respect to the neural network
       model parameters, used in training.
-      
+
     - train(self, x_train, validate, x_val):
-      Performs the training loop for the neural network global model of the 
-      metric function. Setting up batching, and performing logging and 
+      Performs the training loop for the neural network global model of the
+      metric function. Setting up batching, and performing logging and
       intermediate saving.
-      
+
     - save(self, epoch, x_train, x_val, overwrite_old):
-      Save the neural network metric model in its current form, along with the 
-      most recent training and validation data. Functionality to overwrite 
+      Save the neural network metric model in its current form, along with the
+      most recent training and validation data. Functionality to overwrite
       previous saves to reduce output memory requirements.
-      
+
     - validate(self, validation_set):
-      Perform the in training validation, using the independent validation data. 
-      Functionality included for identifying data batches which lead to numerical 
+      Perform the in training validation, using the independent validation data.
+      Functionality included for identifying data batches which lead to numerical
       overflows and training failure.
-      
+
     - check_log_to_wandb(self, epoch_loss_avg, val_losses, batch_idx, is_epoch_end):
       Set up the 'Weights & Biases' logging.
     """
+
     def __init__(self, hp, print_losses=False, restore_hps=False):
         self.hp = hp
         self.val_print = self.hp["val_print"]
@@ -256,24 +238,24 @@ class Network:
             if not restore_hps:
                 # Update imported model implicit hps
                 wandb.config.update(
-                    {"dim": self.model.hp["dim"],
-                     "n_patches": self.model.hp["n_patches"],
-                     "n_hidden": self.model.hp["n_hidden"],
-                     "n_layers": self.model.hp["n_layers"],
-                     "use_bias": self.model.hp["use_bias"]},
-                    allow_val_change=True) #...these are overwritten by the imported model
-                self.model.hp = hp  
-                self.model.set_serializable_hp()      
-        # Build the model
-        else:
-            self.model = GlobalModel(self.hp)
+                    {
+                        "dim": self.model.hp["dim"],
+                        "n_patches": self.model.hp["n_patches"],
+                        "n_hidden": self.model.hp["n_hidden"],
+                        "n_layers": self.model.hp["n_layers"],
+                        "use_bias": self.model.hp["use_bias"],
+                    },
+                    allow_val_change=True,
+                )  # ...these are overwritten by the imported model
+                self.model.hp = hp
+                self.model.set_serializable_hp()
 
         # Print model summary
         # print('Summary:',self.model.summary())
         # print('Submodel summary:',[psm.summary() for psm in self.patch_submodels])
 
         # Define the loss
-        self.loss = TotalLoss(hp=self.hp, print_losses=print_losses)
+        self.loss = None
 
         # Initialise the log dir
         self.log_dir = None
@@ -355,6 +337,7 @@ class Network:
                 # Training loop
                 try:
                     loss_value, grads = self.grad(batch)
+
                 except tf.errors.InvalidArgumentError as _:
                     skip_number += 1
                     if skip_number >= 10:
@@ -398,23 +381,28 @@ class Network:
                 # End epoch
                 train_loss_results.append(epoch_loss_avg.result())
 
-                if validate:
-                    val_losses = self.validate(x_val)
-                else:
-                    val_losses = {}
-
                 # Log every "wandb_log_freq" batches/epoch. (We need the +1 to
                 # protect against div by 0)
                 self.check_log_to_wandb(
-                    epoch_loss_avg, val_losses, batch_idx=batch_idx, is_epoch_end=False
+                    epoch_loss_avg,
+                    val_losses=None,
+                    batch_idx=batch_idx,
+                    is_epoch_end=False,
                 )
+
+            # Perform the validation
+            if validate:
+                val_losses = self.validate(x_val)
+            else:
+                val_losses = {}
 
             # Print the validation measures at each specified interval
             if epoch % self.hp["verbosity"] == 0:
                 print(
                     "Epoch {:03d}: Loss: {:.3f}\n".format(
                         epoch + 1, epoch_loss_avg.result()
-                    ), flush=True
+                    ),
+                    flush=True,
                 )
 
             # Logging
@@ -532,26 +520,29 @@ class Network:
                 # Take the first element of the evaluated batch loss tuple
                 # (the 0th is simply the combined network loss)
                 keys = constituent_batch_loss[1].keys()
+                # Initialiise a subloss list per subloss key
+                constituent_values = [[] for _ in range(len(keys))]
 
-            # Append the values of each of the consistent losses to a list
-            values.append(list(constituent_batch_loss[1].values()))
+            # Append the values of the total losss, and batch average of each consistent losses to a list
+            values.append(constituent_batch_loss[0])
+            for key_idx, key in enumerate(keys):
+                constituent_values[key_idx].append(
+                    np.mean(constituent_batch_loss[1][key])
+                )
 
         if len(values) == 0:
             raise RuntimeError("Not enough invertible validation batches!")
-
-        # Find batch average of each of the constituent losses
-        avg_constituent_losses = np.array(values).mean(axis=0)
 
         # Check if keys are still None
         if keys is None:
             raise RuntimeError("The constituent losses cannot be None.")
 
-        # Find the sum of all of the averaged constituent losses
-        total_avg_loss = np.sum(avg_constituent_losses)
+        # Compute the mean total loss
+        total_avg_loss = np.mean(values)
+        # Compute the mean loss components, and zip with the keys
+        constituent_avg_loss = zip(keys, np.mean(constituent_values, axis=1))
 
-        return {"total_avg_val_loss": total_avg_loss} | dict(
-            zip(keys, avg_constituent_losses)
-        )
+        return {"total_avg_val_loss": total_avg_loss} | dict(constituent_avg_loss)
 
     def check_log_to_wandb(
         self, epoch_loss_avg, val_losses=None, batch_idx=None, is_epoch_end=False

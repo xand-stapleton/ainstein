@@ -7,10 +7,10 @@
 ###############################################################################
 # Geometric set-up
 # Dimensionality of the data (e.g., 2 for 2D data)
-dim: 2
+dim: 2 
 
 # Set the number of patches (current functionality for 1 or 2)
-n_patches: 2
+n_patches: 2 
 
 # Einstein constant, $\lambda$, in Einstein eqn: $R_{ij} = \lambda g_{ij}$
 einstein_constant: 1.0
@@ -27,11 +27,11 @@ overlap_upperwidth: 0.1
 ball: true
 
 # The 1d size of the patch (radii for ball, width for cube) 
-patch_width: 1.
+patch_width: 1. 
 
 # The \alpha factor in the sampling Beta function
 # ...values <1 skew to extremeties, >1 skew to radial midpoint
-density_power: 1.
+density_power: 4.
 
 # Number of samples to generate for training
 num_samples: 10000

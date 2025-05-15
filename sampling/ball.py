@@ -1,8 +1,10 @@
 """Sampling Schemes for the Hyperball & Hypercube"""
+
 # Import libraries
 import numpy as np
 import tensorflow as tf
-tf.keras.backend.set_floatx('float64')
+
+tf.keras.backend.set_floatx("float64")
 
 # Define sampling functions
 def BallSample(
@@ -36,14 +38,22 @@ def BallSample(
     """
 
     # Sample the radii (using a beta distribution, centred on radial midpoint and symmetrised between the patches)
-    radii_p1 = np.random.beta(density_power, density_power/(np.sqrt(2.)-1.)-density_power, size=int(num_pts/2)) 
-    radii_p2 = np.random.beta(density_power, density_power/(np.sqrt(2.)-1.)-density_power, size=int(num_pts/2)) 
+    radii_p1 = np.random.beta(
+        density_power,
+        density_power / (np.sqrt(2.0) - 1.0) - density_power,
+        size=int(num_pts / 2),
+    )
+    radii_p2 = np.random.beta(
+        density_power,
+        density_power / (np.sqrt(2.0) - 1.0) - density_power,
+        size=int(num_pts / 2),
+    )
     radii_p2_inp1 = (1 - radii_p2) / (1 + radii_p2)
     radii = np.concatenate((radii_p1, radii_p2_inp1))
-    
+
     # Scale the radii to the maximum size
     radii *= patch_width
-    
+
     # Sample the final angle
     angles = np.random.uniform(high=2 * np.pi, size=num_pts)
     # Sample the remaining spherical polar angles
@@ -102,12 +112,13 @@ def CubeSample(num_pts, dimension=2, width=1.0, density_power=1.0):
 ###############################################################################
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    from geometry.geometry import PatchChange_Coordinates_Ball
+
+    from geometry.ball import PatchChange_Coordinates_Ball
 
     # Sampling hyperparameters
     num_samples = int(1e4)
-    patch_width = 1.
-    scaling_power = 4.
+    patch_width = 1.0
+    scaling_power = 4.0
 
     # Test the BallSample
     test_ball_sample = BallSample(
@@ -116,20 +127,19 @@ if __name__ == "__main__":
     plt.figure()
     plt.title("Patch 1")
     plt.scatter(test_ball_sample[:, 0], test_ball_sample[:, 1], alpha=0.1)
-    plt.xlim(-1,1)
-    plt.ylim(-1,1)
+    plt.xlim(-1, 1)
+    plt.ylim(-1, 1)
     plt.tight_layout()
-    
+
     test_ball_sample_p2 = PatchChange_Coordinates_Ball(test_ball_sample)
     plt.figure()
     plt.title("Patch 2")
     plt.scatter(test_ball_sample_p2[:, 0], test_ball_sample_p2[:, 1], alpha=0.1)
-    plt.xlim(-1,1)
-    plt.ylim(-1,1)
+    plt.xlim(-1, 1)
+    plt.ylim(-1, 1)
     plt.tight_layout()
-    
-    
-    '''
+
+    """
     # Test the CubeSample
     test_cube_sample = CubeSample(
         num_samples, width=patch_width, density_power=scaling_power
@@ -140,4 +150,4 @@ if __name__ == "__main__":
     plt.xlim(-1,1)
     plt.ylim(-1,1)
     plt.tight_layout()
-    '''
+    """

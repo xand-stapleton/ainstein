@@ -1,13 +1,15 @@
 import tensorflow as tf
+
 tfk = tf.keras
 tfk.backend.set_floatx("float64")
-from copy import deepcopy as dc
 import numpy as np
 import yaml
+
 import wandb
 from helper_functions import argument_parser, wandb_helper
-from network.model import Network
-from sampling.patch_sampling import BallSample, CubeSample
+from network.ball import BallNetwork
+from sampling.ball import BallSample, CubeSample
+
 
 # Main body function for performing the metric training
 def main(hyperparameters_file, runtime_args, wandb_id=None):
@@ -57,7 +59,7 @@ def main(hyperparameters_file, runtime_args, wandb_id=None):
 
     # Add run identifiers for saving tracability
     hp["run_identifiers"] = (wandb.run.name, wandb.run.id)
-    
+
     ###########################################################################
     ### Data set-up ###
     # Create training and validation samples
@@ -77,8 +79,9 @@ def main(hyperparameters_file, runtime_args, wandb_id=None):
                     patch_width=hp["patch_width"],
                     density_power=hp["density_power"],
                 )
-        # Cube patch sampling (full functionality unlikely enitrely compatible at present)
+        # Cube patch sampling (full functionality unlikely entirely compatible at present)
         else:
+            assert hp["n_patches"] == 1, "Cube sampling only suitable for local geometries where don't need the ball structure for patching (set n_patches = 1)"
             train_sample = CubeSample(
                 hp.num_samples,
                 dimension=hp.dim,
@@ -103,11 +106,11 @@ def main(hyperparameters_file, runtime_args, wandb_id=None):
     val_sample_tf = None
     if hp["validate"]:
         val_sample_tf = tf.convert_to_tensor(val_sample, dtype=tf.dtypes.float64)
-        
+
     ###########################################################################
     ### Run ML ###
     # Instantiate the network
-    network = Network(hp=hp, print_losses=hp.print_losses)
+    network = BallNetwork(hp=hp, print_losses=hp.print_losses)
 
     # Train!
     loss_hist = network.train(

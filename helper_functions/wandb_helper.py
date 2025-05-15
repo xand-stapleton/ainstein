@@ -1,5 +1,7 @@
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+
 
 def restore_wandb(args, wandb_id):
     save_location = Path(args["saved_model_path"])

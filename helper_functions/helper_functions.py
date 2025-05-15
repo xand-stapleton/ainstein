@@ -1,9 +1,12 @@
 import os
 from datetime import datetime
+
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_probability as tfp
-tf.keras.backend.set_floatx('float64')
+
+tf.keras.backend.set_floatx("float64")
+
 
 ###############################################################################
 # Functions to perform Cholesky decomposition
@@ -25,15 +28,15 @@ def cholesky_to_vec(full_matrix):
     return lower_triangular_vector
 
 
-# Function to compute weights to scale contributions of points to the losses based on their radii 
-def RadiusWeighting(pts, filter_width=0.5, filter_midpt=0.):
+# Function to compute weights to scale contributions of points to the losses based on their radii
+def RadiusWeighting(pts, filter_width=0.5, filter_midpt=0.0):
     radius = tf.sqrt(tf.reduce_sum(tf.square(pts), axis=1))
-    radius_filter = tf.exp(-tf.pow((radius-filter_midpt)/filter_width, 20))
-    
+    radius_filter = tf.exp(-tf.pow((radius - filter_midpt) / filter_width, 20))
+
     return radius_filter
 
 
-# Function to generate a random filepath 
+# Function to generate a random filepath
 def create_time_date_dir(base_path=None, run_name=""):
     # Get the current date and time
     current_time = datetime.now()

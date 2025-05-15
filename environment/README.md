@@ -1,7 +1,7 @@
 ## Installing without a virtual env
 To install the environment named ainstein, simply change to this directory in the shell and run
 ```
-pip install -r environment/requirements.txt
+pip install -r environment/requirements.txt.
 ```
 
 

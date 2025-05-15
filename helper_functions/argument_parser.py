@@ -9,8 +9,8 @@ def get_args():
     parser.add_argument(
         "--hyperparams",
         type=str,
-        default="hyperparameters/hps.yaml",
         help="Path to the hyperparameters YAML file (default: hyperparameters/patch.yaml)",
+        required=True,
     )
 
     # Logging and sweep arguments
