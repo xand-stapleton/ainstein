@@ -413,9 +413,11 @@ class BaseNetwork:
                 ):
                     self.save(epoch, x_train, x_val)
                 elif self.hp["track_best"] and (
-                    self.best_loss is None or self.best_loss <= epoch_loss_avg
+                    self.best_loss is None
+                    or epoch_loss_avg.result().numpy() <= self.best_loss
                 ):
                     overwrite_old = not (self.hp["save_best_hist"])
+                    self.best_loss = epoch_loss_avg.result().numpy()
                     self.save(epoch, x_train, x_val, overwrite_old=overwrite_old)
 
             # Log to WandB (if it's enabled in hyperparameters) -- always log
