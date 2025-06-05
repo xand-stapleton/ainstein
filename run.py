@@ -58,7 +58,9 @@ def main(hyperparameters_file, runtime_args, wandb_id=None):
     hp = wandb.config
 
     # Add run identifiers for saving tracability
-    hp["run_identifiers"] = (wandb.run.name, wandb.run.id)
+    run_name = wandb.run.name or ""
+    run_id = wandb.run.id or 42
+    hp["run_identifiers"] = (run_name, run_id)
 
     ###########################################################################
     ### Data set-up ###
