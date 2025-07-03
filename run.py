@@ -51,7 +51,7 @@ def main(hyperparameters_file, runtime_args, wandb_id=None):
     print("NP random key: ", np.random.randint(1, np.iinfo(int).max, size=6))
 
     # Start a WeightsandBiases session, and allow resuming from checkpoint
-    wandb.init(project="Exotric", config=args, id=wandb_id, resume="allow")
+    wandb.init(project="Ainstein_ball", config=args, id=wandb_id, resume="allow")
 
     # Allow WandB to control the hyperparameters for sweeps (amounts to
     # over-writing the hyperparameters file with new values).
