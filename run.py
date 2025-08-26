@@ -48,10 +48,16 @@ def main(hyperparameters_file, runtime_args, wandb_id=None):
 
     # Print some random characters to check seed applied correctly
     print("TF random key: ", tf.random.uniform(shape=[6]))
-    print("NP random key: ", np.random.randint(1, np.iinfo(int).max, size=6))
+    print("NP random key: ", np.random.randint(1, np.iinfo(np.int32).max, size=6))
 
     # Start a WeightsandBiases session, and allow resuming from checkpoint
-    wandb.init(project="Ainstein_ball", config=args, id=wandb_id, resume="allow")
+    wandb.init(
+        project="Ainstein_ball",
+        entity="logml",
+        config=args,
+        id=wandb_id,
+        resume="allow",
+    )
 
     # Allow WandB to control the hyperparameters for sweeps (amounts to
     # over-writing the hyperparameters file with new values).
@@ -83,7 +89,9 @@ def main(hyperparameters_file, runtime_args, wandb_id=None):
                 )
         # Cube patch sampling (full functionality unlikely entirely compatible at present)
         else:
-            assert hp["n_patches"] == 1, "Cube sampling only suitable for local geometries where don't need the ball structure for patching (set n_patches = 1)"
+            assert hp["n_patches"] == 1, (
+                "Cube sampling only suitable for local geometries where don't need the ball structure for patching (set n_patches = 1)"
+            )
             train_sample = CubeSample(
                 hp.num_samples,
                 dimension=hp.dim,
