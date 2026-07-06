@@ -108,6 +108,7 @@ psutil
 ptyprocess
 pure-eval
 pycparser
+pydantic
 Pygments
 pyparsing
 PySocks
@@ -131,7 +132,7 @@ soupsieve
 stack-data
 tensorboard
 tensorboard-data-server
-tensorflow
+tensorflow[and-cuda]
 tensorflow-datasets
 tensorflow-metadata
 tensorflow-probability

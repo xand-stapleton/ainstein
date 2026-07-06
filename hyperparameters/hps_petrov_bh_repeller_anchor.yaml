@@ -1,0 +1,79 @@
+model:
+  experiment: schwarzschild
+  saved_model: false
+  saved_model_path: null
+  dtype: float64
+  n_hidden: 256
+  n_layers: 6
+  activations: gelu
+  use_bias: true
+  np_seed: 123
+  tf_seed: 123
+geometry:
+  dim: 4
+  n_patches: 1
+  einstein_constant: 0.0
+  overlap_upperwidth: 0.1
+data:
+  num_samples: 80
+loss:
+  einstein_multiplier: 1.0
+  overlap_multiplier: 0.0
+  finiteness_multiplier: 0.0
+  trapped_surface_schedule:
+    strategy: constant
+    warmup_epochs: 5
+training:
+  epochs: 10
+  batch_size: 5
+  init_learning_rate: 0.0003
+  min_learning_rate: 3.0e-06
+  use_validation: false
+  verbosity: 1
+logging:
+  log_wandb: false
+  log_interim: true
+  log_dir: runs
+  track_best: true
+model_specific:
+  lorentzian: true
+  embed: true
+  m: 1.0
+  use_penrose_region_curriculum: false
+  patch_width_R2: 0.85
+  patch_width_S2: 1.0
+  density_power_R2: 1.0
+  density_power_S2: 1.0
+  einstein_loss_mode: weyl_normalized
+  curvature_norm_epsilon: 0.001
+  speciality_index_rprofile_multiplier: 1.0
+  speciality_index_rprofile_mode: profile
+  speciality_index_rprofile_centre: 2.0
+  speciality_index_rprofile_epsilon: 0.01
+  r2_det_loss_multiplier: 0.075
+  det_barrier_mode: both_blocks
+  horizon_anchor_multiplier: 3.0
+  horizon_anchor_target: 1.7320508075688772
+  horizon_anchor_band: 0.1
+  horizon_anchor_invariant: weyl_i
+  kretschmann_sqrt_epsilon: 1.0e-12
+  trapped_surface_multiplier: 25.0
+  trapped_surface_margin_mode: profile
+  trapped_surface_margin_slope: 1.0
+  trapped_surface_margin_floor: 0.08
+  trapped_surface_band: 0.1
+  trapped_surface_margin: 0.0
+  trapped_surface_horizon_weight: 1.0
+  kretschmann_multiplier: 0.0
+  k_repeller_multiplier: 0.0
+  killing_symmetry_multiplier: 0.0
+  speciality_index_multiplier: 0.0
+  use_volume_scaling: false
+  use_metric_contraction: false
+  ricci_kernel: optimised
+  kretschmann_loss_mode: log_profile
+visualisation:
+  visualise: false
+  num_samples: 4000
+metadata:
+  run_name: c7c_f08_t25_s123

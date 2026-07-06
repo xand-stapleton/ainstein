@@ -1,0 +1,152 @@
+###############################################################################
+# Model set-up
+model:
+  experiment: schwarzschild
+
+  # Start from a fresh model for local unsupervised runs.
+  saved_model: false
+  saved_model_path: null
+
+  # float64 is preferred for curvature calculations.
+  dtype: float64
+
+  n_hidden: 128
+  n_layers: 4
+  activations: gelu
+  use_bias: true
+
+  # Seeds are set by the sweep script per run.
+  np_seed: null
+  tf_seed: null
+
+###############################################################################
+# Geometric set-up
+geometry:
+  dim: 2
+  n_patches: 1
+
+  # Swept externally over {-1, 0, +1}.
+  einstein_constant: 0.0
+
+  overlap_upperwidth: 0.1
+
+###############################################################################
+# Data set-up
+data:
+  # Keep this high enough for stable local Einstein estimates.
+  num_samples: 1000
+
+###############################################################################
+# Loss set-up
+loss:
+  # Local mode request: Einstein loss only.
+  einstein_multiplier: 1.0
+  overlap_multiplier: 0.0
+  finiteness_multiplier: 0.0
+
+  # Keep multipliers fixed for reproducible lambda comparisons.
+  einstein_schedule: null
+  kretschmann_schedule: null
+  r2_det_schedule: null
+  overlap_schedule: null
+  finiteness_schedule: null
+
+###############################################################################
+# Finiteness filter hyperparameters (unused when finiteness multiplier is 0)
+finiteness:
+  finite_centre: 140
+  finite_width: 160
+  finite_sharpness: 8
+  finite_height: 100
+  finite_slope: 0.2
+
+###############################################################################
+# Training set-up
+training:
+  epochs: 100
+  batch_size: 512
+
+  init_learning_rate: 0.001
+  min_learning_rate: 0.00002
+
+  use_validation: false
+  val_print: false
+  num_val_samples: 2000
+  val_batch_size: 256
+
+  verbosity: 1
+
+###############################################################################
+# Logging set-up
+logging:
+  log_wandb: false
+  wandb_log_freq: 10
+
+  log_interim: true
+  log_dir: runs
+  log_interval: null
+
+  track_best: true
+  save_best_hist: false
+
+  log_errors: true
+  print_batch_losses: false
+
+###############################################################################
+# Model-specific parameters
+model_specific:
+  # Lorentzian signature with the existing indefinite-Cholesky pathway.
+  lorentzian: true
+
+  # Local 2D mode: no Schwarzschild embedding and no Penrose pathway.
+  local_2d_mode: true
+
+  # Keep embed false in local 2D mode for clarity.
+  embed: false
+
+  # The S2-chart local mode is not used in local_2d_mode.
+  local_single_s2_patch: false
+  local_s2_patch_idx: 0
+
+  # Circle-region limits. In local_2d_mode, patch_width_S2 is used as the
+  # active 2D patch width; patch_width_R2 is ignored.
+  patch_width_R2: 0.85
+  patch_width_S2: 1.0
+
+  # In local_2d_mode, density_power_S2 is used as the active 2D sampling
+  # density control; density_power_R2 is ignored.
+  density_power_R2: 1.0
+  density_power_S2: 1.0
+
+  density_power_R2_schedule: null
+  density_power_S2_schedule: null
+
+  # Einstein-only local training.
+  kretschmann_multiplier: 0.0
+  r2_det_loss_multiplier: 0.0
+
+  use_area_measure_weight: true
+  use_metric_contraction: true
+  ricci_kernel: optimised
+
+  m: 1.0
+
+###############################################################################
+# Visualisation parameters
+visualisation:
+  # Keep sweep runs lightweight; generate plots in post-processing.
+  visualise: false
+  num_samples: 4000
+  patch_width_R2: 0.85
+  patch_width_S2: 1.0
+  density_power_R2: 1.0
+  density_power_S2: 1.0
+
+  # Inherit local mode for plotting by default.
+  local_single_s2_patch: null
+  local_s2_patch_idx: null
+
+###############################################################################
+# Metadata
+metadata:
+  run_name: schwarzschild_local_lorentz

@@ -1,0 +1,94 @@
+[project]
+name = "ainstein"
+version = "0.1.0"
+description = "Ainstein project"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+
+authors = [
+  { name = "Tancredi Schettini-Gherardini" },
+  { name = "Ed Hirst" },
+  { name = "Alexander Stapleton", email = "alexander.stapleton@pm.me" }
+]
+
+maintainers = [
+  { name = "Tancredi Schettini-Gherardini" },
+  { name = "Ed Hirst" },
+  { name = "Alexander Stapleton", email = "alexander.stapleton@pm.me" }
+]
+
+keywords = [
+  "ai",
+  "machine-learning",
+  "tensorflow",
+  "python"
+]
+
+dependencies = [
+  "numpy",
+  "pandas",
+  "polars",
+  "pyyaml",
+  "requests",
+  "jsonargparse",
+  "jsonschema",
+  "fsspec",
+  "tensorflow",
+  "tensorflow-datasets",
+  "tensorflow-probability",
+  "tf_keras",
+  "keras",
+  "matplotlib",
+  "wandb",
+  "tqdm",
+  "rich",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff",
+  "ipykernel",
+  "ipython",
+  "jupyterlab",
+  "notebook",
+]
+
+[project.urls]
+Homepage = "https://github.com/xand-stapleton/ainstein"
+Repository = "https://github.com/xand-stapleton/ainstein"
+Issues = "https://github.com/xand-stapleton/ainstein/issues"
+
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+  "losses*",
+  "network*",
+  "runtime*",
+  "sampling*",
+  "geometry*",
+  "seed_models*",
+  "visualisation*",
+  "utils*",
+  "hyperparameters*",
+  "helper_functions*",
+  "configs*",
+]
+exclude = [
+  "runs*",
+  "wandb*",
+  "notebooks*",
+  "environment*",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = []

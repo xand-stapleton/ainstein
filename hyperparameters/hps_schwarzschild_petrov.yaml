@@ -1,0 +1,168 @@
+###############################################################################
+# Option C: Einstein + R2Det + K-Repeller + speciality-index r-profile.
+#
+# K-repeller epsilon/(|K|+epsilon) prevents collapse to flat (Type O).
+# The speciality-index r-profile fits a smooth non-constant quadrupolar S profile
+# inspired by Zipoy-Voorhees/gamma metrics away from the Schwarzschild type-D limit.
+# R2Det barrier kept to guard against degenerate-metric failure mode.
+#
+# Intent: find a Ricci-flat vacuum solution that is not algebraically type-D.
+# Post-run analysis should show S = 27J^2/I^3 with non-trivial variance and
+# the S histogram NOT peaked only at the type-D value S = 1.
+###############################################################################
+
+###############################################################################
+# Model set-up
+model:
+  experiment: schwarzschild
+
+  # Start from a stable low-Einstein run and perturb the weights to break the
+  # constant-S/type-D basin without destroying the learned Lorentzian metric.
+  saved_model: true
+  saved_model_path: seed_models/IL_embed.keras
+  saved_model_weight_noise: 0.01
+
+  dtype: float64
+
+  n_hidden: 128
+  n_layers: 4
+  activations: gelu
+  use_bias: true
+
+  np_seed: null
+  tf_seed: null
+
+###############################################################################
+# Geometric set-up
+geometry:
+  dim: 4
+  n_patches: 1
+  einstein_constant: 0.0
+  overlap_upperwidth: 0.1
+
+###############################################################################
+# Data set-up
+data:
+  num_samples: 10000
+
+###############################################################################
+# Loss set-up
+loss:
+  einstein_multiplier: 1.0
+  overlap_multiplier: 0.0
+  finiteness_multiplier: 0.0
+
+  # Keep Einstein active: previous profile-first runs damaged Ricci flatness and
+  # the metric determinant before finding a useful speciality-index profile.
+  einstein_schedule: null
+  kretschmann_schedule: null
+
+  r2_det_schedule: null
+
+  speciality_index_schedule: null
+
+  # Keep the K-repeller on from the beginning to avoid the flat/type-O basin.
+  k_repeller_schedule: null
+
+  # Keep the S-profile loss on from the beginning. It has a nonzero pointwise
+  # signal even when S is initially constant.
+  speciality_index_rprofile_schedule: null
+
+  overlap_schedule: null
+  finiteness_schedule: null
+
+###############################################################################
+# Finiteness filter (unused in embedding mode but required by config schema)
+finiteness:
+  finite_centre: 140
+  finite_width: 160
+  finite_sharpness: 8
+  finite_height: 100
+  finite_slope: 0.2
+
+###############################################################################
+# Training set-up
+training:
+  epochs: 500
+
+  batch_size: 128
+
+  init_learning_rate: 0.00005
+  min_learning_rate: 0.000002
+
+  use_validation: true
+  val_print: false
+  num_val_samples: 500
+  val_batch_size: 100
+
+  verbosity: 1
+
+###############################################################################
+# Logging set-up
+logging:
+  log_wandb: false
+  wandb_log_freq: 10
+
+  log_interim: true
+  log_dir: 'runs'
+  log_interval: null
+  track_best: true
+  save_best_hist: false
+  log_errors: true
+  print_batch_losses: false
+
+###############################################################################
+# Model-specific parameters
+model_specific:
+  lorentzian: true
+  embed: true
+
+  patch_width_R2: 0.85
+  patch_width_S2: 1.0
+
+  density_power_R2: 0.8
+  density_power_S2: 1.0
+
+  density_power_R2_schedule: null
+  density_power_S2_schedule: null
+
+  # Kretschmann profile-matching loss is disabled for the non-type-D search.
+  kretschmann_multiplier: 0.0
+
+  # Speciality-index S=1 type-D loss
+  speciality_index_multiplier: 0.0
+
+  # Do not impose Schwarzschild spherical symmetry in the non-type-D search.
+  killing_symmetry_multiplier: 0.0
+
+  # K-repeller: bounded soft barrier against collapse to flat/type-O space.
+  # This is not a Kretschmann profile-matching loss.
+  # At K~0: loss ~ 1; contribution ~ 0.01.  At K>>epsilon: loss ~ 0.
+  k_repeller_multiplier: 0.001
+  k_repeller_epsilon: 0.0001
+
+  # Speciality-index r-profile: fit S to a bounded quadrupolar type-I profile.
+  # Centre at S=2 so the mean is visibly away from the type-D value S=1.
+  speciality_index_rprofile_mode: profile
+  speciality_index_rprofile_centre: 2.0
+  speciality_index_rprofile_multiplier: 0.05
+  speciality_index_rprofile_epsilon: 0.000001
+
+  use_area_measure_weight: true
+  use_metric_contraction: true
+  ricci_kernel: optimised
+
+  # Stronger than earlier runs: scarlet-gorge collapsed the metric scale.
+  r2_det_loss_multiplier: 0.001
+
+  m: 1.0
+
+###############################################################################
+# Visualisation parameters
+visualisation:
+  visualise: true
+  num_samples: 1000
+  patch_width_R2: 0.8
+  patch_width_S2: 1.0
+  density_power_R2: 1.0
+  density_power_S2: 1.0

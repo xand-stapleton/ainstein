@@ -1,148 +1,148 @@
+from __future__ import annotations
+
+import os
+import sys
+
+# --- GPU / device setup ---
+# Apple Metal (macOS, tensorflow-metal) only supports float32 and will crash
+# when its graph-optimizer intercepts float64 tensors.  CUDA / ROCm GPUs
+# (Linux HPC clusters) support float64 natively and should be used freely.
+# We therefore suppress the GPU only on macOS.
+#
+# Some PBS schedulers set CUDA_VISIBLE_DEVICES to "" (empty string) rather
+# than leaving it unset, which causes TensorFlow to find no GPUs even when
+# GPUs have been allocated to the job.  Unset it here – before TF is imported
+# and CUDA initialises – so TF can discover available GPUs automatically.
+if sys.platform != "darwin":
+    _cvd = os.environ.get("CUDA_VISIBLE_DEVICES", None)
+    if _cvd == "":
+        # Some PBS schedulers set this to "" rather than leaving it unset,
+        # which prevents TF from finding any GPUs.
+        del os.environ["CUDA_VISIBLE_DEVICES"]
+        print(
+            "CUDA_VISIBLE_DEVICES was empty – unset so TF can discover all allocated GPUs."
+        )
+    elif _cvd is not None and _cvd.startswith("MIG-"):
+        # PBS allocates MIG (Multi-Instance GPU) slices and sets
+        # CUDA_VISIBLE_DEVICES to the MIG UUID (e.g. "MIG-<uuid>").
+        # TensorFlow's CUDA backend cannot parse this UUID format and reports
+        # CUDA_ERROR_NO_DEVICE even though a GPU slice is allocated.  Unsetting
+        # the variable lets CUDA auto-discover the device; PBS cgroup isolation
+        # ensures the job can only see its own MIG slice.
+        del os.environ["CUDA_VISIBLE_DEVICES"]
+        print(
+            f"CUDA_VISIBLE_DEVICES was a MIG UUID ({_cvd!r}) – unset so TF can discover the MIG device."
+        )
+    elif _cvd is not None:
+        print(f"CUDA_VISIBLE_DEVICES={_cvd!r}")
+
 import tensorflow as tf
 
+_physical_gpus = tf.config.list_physical_devices("GPU")
+if _physical_gpus:
+    try:
+        for _gpu in _physical_gpus:
+            tf.config.experimental.set_memory_growth(_gpu, True)
+    except RuntimeError as e:
+        print(f"GPU setup warning: {e}")
+
+    _is_apple_metal = sys.platform == "darwin"
+    if _is_apple_metal:
+        # Hide the Metal GPU — float64 is incompatible with Apple Metal.
+        tf.config.set_visible_devices([], "GPU")
+        print(
+            f"GPU(s) detected ({[d.name for d in _physical_gpus]}) but hidden: "
+            "Apple Metal does not support float64. "
+            "Switch to float32 (remove set_floatx call) to use the GPU on macOS."
+        )
+    else:
+        # CUDA/ROCm — float64 is supported; use all visible GPUs.
+        print(f"GPU(s) available and enabled: {[d.name for d in _physical_gpus]}.")
+else:
+    print("No GPU found – running on CPU.")
+# ---
+
 tfk = tf.keras
-tfk.backend.set_floatx("float64")
-import numpy as np
 import yaml
 
-import wandb
-from helper_functions import argument_parser, wandb_helper
-from network.ball import BallNetwork
-from sampling.ball import BallSample, CubeSample
+from helper_functions import argument_parser
 
 
-# Main body function for performing the metric training
-def main(hyperparameters_file, runtime_args, wandb_id=None):
-    ###########################################################################
-    ### Training & Logging set-up ###
-    # Load the hyperparameters YAML file
-    with open(hyperparameters_file, "r") as file:
-        args = yaml.safe_load(file)
-
-    for arg, arg_val in args.items():
-        if arg in runtime_args:
-            args[arg] = runtime_args[arg]
-
-    # Check if restoring WandB
-    if wandb_id is not None:
-        args, x_train = wandb_helper.restore_wandb(args, wandb_id)
-    else:
-        # Initialise the training and val batches
-        x_train, x_val = None, None
-
-    # Check and set seeds for reproducibility
-    rng = np.random.default_rng()
-    # ...for NumPy
-    if args["np_seed"] is None:
-        args["np_seed"] = int(rng.integers(2**32 - 2))
-    # ...for TensorFlow
-    if args["tf_seed"] is None:
-        args["tf_seed"] = int(rng.integers(2**32 - 2))
-
-    # Make sure the config things are ints
-    args["np_seed"] = int(args["np_seed"])
-    args["tf_seed"] = int(args["tf_seed"])
-    np.random.seed(args["np_seed"])
-    tf.random.set_seed(args["tf_seed"])
-    tfk.utils.set_random_seed(args["tf_seed"])
-
-    # Print some random characters to check seed applied correctly
-    print("TF random key: ", tf.random.uniform(shape=[6]))
-    print("NP random key: ", np.random.randint(1, np.iinfo(np.int32).max, size=6))
-
-    # Start a WeightsandBiases session, and allow resuming from checkpoint
-    wandb.init(
-        project="Ainstein_ball",
-        entity="logml",
-        config=args,
-        id=wandb_id,
-        resume="allow",
-    )
-
-    # Allow WandB to control the hyperparameters for sweeps (amounts to
-    # over-writing the hyperparameters file with new values).
-    hp = wandb.config
-
-    # Add run identifiers for saving tracability
-    run_name = wandb.run.name or ""
-    run_id = wandb.run.id or 42
-    hp["run_identifiers"] = (run_name, run_id)
-
-    ###########################################################################
-    ### Data set-up ###
-    # Create training and validation samples
-    if wandb_id is None:
-        # Ball patch sampling
-        if hp["ball"]:
-            train_sample = BallSample(
-                hp.num_samples,
-                dimension=hp.dim,
-                patch_width=hp["patch_width"],
-                density_power=hp["density_power"],
-            )
-            if hp["validate"]:
-                val_sample = BallSample(
-                    hp.num_val_samples,
-                    dimension=hp.dim,
-                    patch_width=hp["patch_width"],
-                    density_power=hp["density_power"],
-                )
-        # Cube patch sampling (full functionality unlikely entirely compatible at present)
-        else:
-            assert hp["n_patches"] == 1, (
-                "Cube sampling only suitable for local geometries where don't need the ball structure for patching (set n_patches = 1)"
-            )
-            train_sample = CubeSample(
-                hp.num_samples,
-                dimension=hp.dim,
-                width=hp["patch_width"],
-                density_power=hp["density_power"],
-            )
-            if hp["validate"]:
-                val_sample = CubeSample(
-                    hp.num_val_samples,
-                    dimension=hp.dim,
-                    width=hp["patch_width"],
-                    density_power=hp["density_power"],
-                )
-    # If wandb_id is not None
-    else:
-        train_sample = x_train
-        if hp["validate"]:
-            val_sample = x_val
-
-    # Convert to tf objects
-    train_sample_tf = tf.convert_to_tensor(train_sample, dtype=tf.dtypes.float64)
-    val_sample_tf = None
-    if hp["validate"]:
-        val_sample_tf = tf.convert_to_tensor(val_sample, dtype=tf.dtypes.float64)
-
-    ###########################################################################
-    ### Run ML ###
-    # Instantiate the network
-    network = BallNetwork(hp=hp, print_losses=hp.print_losses)
-
-    # Train!
-    loss_hist = network.train(
-        x_train=train_sample_tf, validate=hp["validate"], x_val=val_sample_tf
-    )
-
-    # Close the WandB session
-    wandb.finish()
-
-    return loss_hist, train_sample_tf, val_sample_tf
-
-
-###############################################################################
-if __name__ == "__main__":
-    # Extract the runtime args
+def main():
     args = argument_parser.get_args()
-
-    # Extract any specified WandB id passed to the run
     wandb_id = args.wandb_id
+    runtime_config = argument_parser.prune_none_args(args)
 
-    # Create a dict of the training arguments
-    runtime_args = argument_parser.prune_none_args(args)
+    # Load the YAML config and check the "experiment" value
+    with open(args.config_file, "r") as f:
+        config_yaml = yaml.safe_load(f)
 
-    # Perform the training
-    lh, train_data, val_data = main(args.hyperparams, runtime_args, wandb_id)
+    # Set float dtype before any TF model/tensor creation.
+    _dtype = (
+        config_yaml.get("dtype")
+        or config_yaml.get("model", {}).get("dtype")
+        or "float64"
+    )
+    tfk.backend.set_floatx(_dtype)
+
+    # Fallback to sphere if not provided.
+    # Allows legacy hyperparameters files to be used.
+    experiment_name = (
+        config_yaml.get("experiment")
+        or config_yaml.get("model", {}).get("experiment")
+        or "schwarzschild"
+    )
+
+    match experiment_name.lower():
+        case "sphere":
+            print("Running sphere experiment...")
+            from runtime.sphere import SphereTrainerRunner
+
+            runner = SphereTrainerRunner(
+                supervised=args.supervised,
+                identity=args.identity,
+                config_file=args.config_file,
+                runtime_config=runtime_config,
+                wandb_id=wandb_id,
+            )
+
+        case "schwarzschild":
+            print("Running Schwarzschild experiment...")
+            from runtime.schwarzschild import SchwarzschildTrainerRunner
+
+            runner = SchwarzschildTrainerRunner(
+                supervised=args.supervised,
+                identity=args.identity,
+                config_file=args.config_file,
+                runtime_config=runtime_config,
+                wandb_id=wandb_id,
+            )
+        case "lens":
+            print("Running lens experiment...")
+            from runtime.lens import LensTrainerRunner
+
+            runner = LensTrainerRunner(
+                supervised=args.supervised,
+                identity=args.identity,
+                config_file=args.config_file,
+                runtime_config=runtime_config,
+                wandb_id=wandb_id,
+            )
+        case _:
+            raise ValueError(...)
+
+    if not args.supervised:
+        train_sample_metric = None
+        loss_hist, train_data, val_data = runner.run()
+        if runner.config.visualisation.visualise:
+            runner.visualise(train_losses=loss_hist)
+    else:
+        _, loss_hist, train_data, train_sample_metric, val_data = (
+            runner.run_supervised()
+        )
+
+    return loss_hist, train_data, train_sample_metric, val_data
+
+
+if __name__ == "__main__":
+    main()
