@@ -25,7 +25,6 @@ geometry:
   dim: 2
   n_patches: 1
 
-  # Swept externally over {-1, 0, +1}.
   einstein_constant: 0.0
 
   overlap_upperwidth: 0.1
@@ -50,15 +49,6 @@ loss:
   r2_det_schedule: null
   overlap_schedule: null
   finiteness_schedule: null
-
-###############################################################################
-# Finiteness filter hyperparameters (unused when finiteness multiplier is 0)
-finiteness:
-  finite_centre: 140
-  finite_width: 160
-  finite_sharpness: 8
-  finite_height: 100
-  finite_slope: 0.2
 
 ###############################################################################
 # Training set-up
@@ -149,4 +139,4 @@ visualisation:
 ###############################################################################
 # Metadata
 metadata:
-  run_name: schwarzschild_local_lorentz
+  run_name: local_lorentzian

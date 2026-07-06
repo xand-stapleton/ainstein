@@ -103,20 +103,6 @@ loss:
   finiteness_schedule: null
 
 ###############################################################################
-# Finiteness filter hyperparameters
-finiteness:
-  # Centre of the minimum
-  finite_centre: 140
-  # Width of the minimum
-  finite_width: 160 
-  # Sharpness of the curve at the boundary of the minimum region
-  finite_sharpness: 8 
-  # Height of the "walls" around the minimum
-  finite_height: 100 
-  # Slope of the lines which start at the top of the "walls"
-  finite_slope: 0.2 
-
-###############################################################################
 # Training set-up
 training:
   # Number of training epochs
@@ -287,9 +273,6 @@ model_specific:
     decay_rate: 0.96
     steps: 1
   density_power_S2_schedule: null
-    # strategy: step
-    # decay_rate: 0.5
-    # steps: 1
 
   # Opt-in Penrose region curriculum.  Early training sees more exterior and
   # horizon points; late training remains global but spends more samples in the
