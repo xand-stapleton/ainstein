@@ -32,7 +32,11 @@ Jupyter notebooks, with naming conventions of `examine_output.ipynb` plus the re
     archivePrefix = "arXiv",
     primaryClass = "hep-th",
     reportNumber = "QMUL-PH-25-04",
-    month = "2",
+    doi = "10.1088/3050-287X/ae1117",
+    journal = "AI Sci.",
+    volume = "1",
+    number = "2",
+    pages = "025001",
     year = "2025"
 }
 ```
