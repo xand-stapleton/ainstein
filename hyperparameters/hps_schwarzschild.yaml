@@ -7,24 +7,20 @@
 geometry:
   dim: 4
   n_patches: 1
-  overlap_upperwidth: 0.1
   einstein_constant: 0.0
 
 ###############################################################################
 # Data
 data:
   patch_width: null
-  num_samples: 8000
+  num_samples: 10000
 
 ###############################################################################
 # Loss
 loss:
   einstein_multiplier: 1.0
-  overlap_multiplier: 0.0
-  finiteness_multiplier: 0.0
+
   einstein_schedule: null
-  overlap_schedule: null
-  finiteness_schedule: null
   kretschmann_schedule: null
   r2_det_schedule: null
   speciality_index_schedule: null
@@ -50,7 +46,7 @@ model:
 ###############################################################################
 # Training
 training:
-  epochs: 10
+  epochs: 500
   batch_size: 5
   init_learning_rate: 0.0003
   min_learning_rate: 3.0e-06
