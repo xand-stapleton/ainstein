@@ -57,15 +57,6 @@ training:
   verbosity: 1
 
 ###############################################################################
-# Finiteness
-finiteness:
-  finite_centre: 140
-  finite_width: 160
-  finite_sharpness: 8
-  finite_height: 100
-  finite_slope: 0.2
-
-###############################################################################
 # Logging
 logging:
   log_wandb: false
