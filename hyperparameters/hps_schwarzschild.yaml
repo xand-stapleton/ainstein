@@ -1,138 +1,79 @@
 ###############################################################################
-# Schwarzschild search hyperparameters
+# Schwarzschild hyperparameters
 ###############################################################################
-
-###############################################################################
-# Model
-model:
-  experiment: blackhole
-
-  # Coarse 5D-ambient SchwarzschildGlobalModel seed. This config uses a staged
-  # continuation because the seed is not a polished unsupervised solution.
-  saved_model: true
-  saved_model_path: seed_models/IL_embed.keras
-  saved_model_weight_noise: 0.0
-
-  dtype: float64
-  n_hidden: 128
-  n_layers: 4
-  activations: gelu
-  use_bias: true
-
-  np_seed: null
-  tf_seed: null
 
 ###############################################################################
 # Geometry
 geometry:
   dim: 4
   n_patches: 1
+  overlap_upperwidth: 0.1
   einstein_constant: 0.0
 
 ###############################################################################
 # Data
 data:
-  num_samples: 10000
+  patch_width: null
+  num_samples: 8000
 
 ###############################################################################
 # Loss
 loss:
-  einstein_multiplier: 0.35
-
-  # Loss schedules. Null keeps each multiplier fixed at its base value.
+  einstein_multiplier: 1.0
+  overlap_multiplier: 0.0
+  finiteness_multiplier: 0.0
   einstein_schedule: null
+  overlap_schedule: null
+  finiteness_schedule: null
   kretschmann_schedule: null
   r2_det_schedule: null
+  speciality_index_schedule: null
   killing_symmetry_schedule: null
   k_repeller_schedule: null
   speciality_index_rprofile_schedule: null
-  horizon_anchor_schedule: null
-  trapped_surface_schedule: null
 
 ###############################################################################
-# Training stages
-#
-# Stage 1 is the global geometric fit. Stage 2 changes sampling and learning
-# rate to polish interior behaviour without replacing the stage-1 solution.
-training_stages:
-  - name: global_geometric_fit
-    epochs: 300
-    init_learning_rate: 0.0003
-    min_learning_rate: 0.000003
-
-  - name: interior_visual_polish
-    epochs: 50
-    init_learning_rate: 0.000006
-    min_learning_rate: 0.000001
-
-    einstein_multiplier: 6.0
-    einstein_schedule: null
-
-    kretschmann_multiplier: 6.0
-    kretschmann_schedule: null
-
-    r2_det_loss_multiplier: 0.01
-    r2_det_schedule: null
-
-    killing_symmetry_multiplier: 1.5
-    killing_symmetry_schedule: null
-
-    use_volume_scaling: true
-    use_metric_contraction: true
-    volume_scaling_loss_components:
-      einstein: true
-      kretschmann: true
-      r2_det: true
-      killing_symmetry: true
-      k_repeller: true
-      speciality_index_rprofile: true
-    metric_contraction_loss_components:
-      einstein: true
-      kretschmann: false
-      r2_det: false
-      killing_symmetry: true
-      k_repeller: false
-      speciality_index_rprofile: true
-
-    patch_width_R2: 0.85
-    density_power_R2: 0.25
-    density_power_R2_schedule: null
-
-    use_penrose_region_curriculum: true
-    penrose_interior_only: true
-    penrose_region_exterior_start: 0.0
-    penrose_region_interior_start: 0.65
-    penrose_region_horizon_start: 0.0
-    penrose_region_singularity_start: 0.35
-    penrose_region_exterior_end: 0.0
-    penrose_region_interior_end: 0.55
-    penrose_region_horizon_end: 0.0
-    penrose_region_singularity_end: 0.45
-    penrose_region_horizon_width: 0.06
-    penrose_region_singularity_width: 0.14
+# Model
+model:
+  experiment: blackhole
+  saved_model: false
+  saved_model_path: null
+  saved_model_weight_noise: 0.0
+  n_hidden: 256
+  n_layers: 6
+  activations: gelu
+  use_bias: true
+  np_seed: 66
+  tf_seed: 66
+  dtype: float64
 
 ###############################################################################
 # Training
 training:
   epochs: 10
-  batch_size: 25
-
+  batch_size: 5
   init_learning_rate: 0.0003
-  min_learning_rate: 0.000003
-
-  use_validation: true
+  min_learning_rate: 3.0e-06
+  use_validation: false
   val_print: false
-  num_val_samples: 200
+  num_val_samples: 500
   val_batch_size: 100
-
   verbosity: 1
+
+###############################################################################
+# Finiteness
+finiteness:
+  finite_centre: 140
+  finite_width: 160
+  finite_sharpness: 8
+  finite_height: 100
+  finite_slope: 0.2
 
 ###############################################################################
 # Logging
 logging:
   log_wandb: false
   wandb_log_freq: 10
-
   log_interim: true
   log_dir: runs
   log_interval: null
@@ -144,76 +85,70 @@ logging:
 ###############################################################################
 # Model-specific
 model_specific:
-  # Signature and architecture.
   lorentzian: true
   embed: true
-  m: 1.0
-
-  # Penrose R2 and stereographic S2 sampling controls.
+  local_2d_mode: false
+  local_2d_patch_width: null
+  local_2d_density_power: null
+  local_single_s2_patch: false
+  local_s2_patch_idx: 0
+  density_power_R2: 1.0
+  density_power_R2_schedule: null
+  density_power_S2: 1.0
+  density_power_S2_schedule: null
   patch_width_R2: 0.85
   patch_width_S2: 1.0
-  density_power_R2: 1.1
-  density_power_S2: 1.0
-  density_power_R2_schedule: null
-  density_power_S2_schedule: null
-
-  # Curriculum shifts attention toward black/white-hole interior bands.
-  use_penrose_region_curriculum: true
-  penrose_interior_only: false
-  penrose_region_exterior_start: 0.45
-  penrose_region_interior_start: 0.30
-  penrose_region_horizon_start: 0.20
+  use_penrose_region_curriculum: false
+  penrose_region_exterior_start: 0.55
+  penrose_region_interior_start: 0.25
+  penrose_region_horizon_start: 0.15
   penrose_region_singularity_start: 0.05
-  penrose_region_exterior_end: 0.20
-  penrose_region_interior_end: 0.45
+  penrose_region_exterior_end: 0.25
+  penrose_region_interior_end: 0.55
   penrose_region_horizon_end: 0.15
-  penrose_region_singularity_end: 0.20
+  penrose_region_singularity_end: 0.05
   penrose_region_horizon_width: 0.06
-  penrose_region_singularity_width: 0.10
-
-  # Schwarzschild embedding loss terms.
-  kretschmann_multiplier: 3.5
+  penrose_region_singularity_width: 0.1
+  penrose_interior_only: false
+  kretschmann_multiplier: 1.0
   r2_det_loss_multiplier: 0.075
+  speciality_index_multiplier: 0.0
   killing_symmetry_multiplier: 1.0
   k_repeller_multiplier: 0.0
+  k_repeller_epsilon: 0.0001
+  speciality_index_rprofile_mode: profile
+  speciality_index_rprofile_centre: 2.0
   speciality_index_rprofile_multiplier: 0.0
-
-  # Loss norm conventions.
+  speciality_index_rprofile_epsilon: 0.01
+  m: 1.0
   use_volume_scaling: true
+  use_area_measure_weight: false
   use_metric_contraction: true
   volume_scaling_loss_components:
-    einstein: true
-    kretschmann: true
-    r2_det: true
-    killing_symmetry: true
-    k_repeller: true
-    speciality_index_rprofile: true
-  metric_contraction_loss_components:
-    einstein: true
-    kretschmann: false
-    r2_det: false
-    killing_symmetry: true
-    k_repeller: false
-    speciality_index_rprofile: true
-
-  # Ricci/Kretschmann kernel: standard reverse-mode or optimised forward-mode.
+    killing_symmetry: false
+  metric_contraction_loss_components: null
   ricci_kernel: optimised
+  einstein_loss_mode: curvature_normalized_capped
+  curvature_norm_epsilon: 0.001
+  curvature_norm_cap_kappa: 1.0
+  kretschmann_loss_mode: weyl_invariant
+  kretschmann_sqrt_epsilon: 1.0e-12
+  weyl_invariant_norm: 0.0625
+  det_barrier_mode: both_blocks
 
 ###############################################################################
 # Visualisation
 visualisation:
-  visualise: true
-  num_samples: 1000
+  visualise: false
+  # num_samples: 4000
+  num_samples: 40
   patch_width_R2: 0.8
   patch_width_S2: 1.0
-  density_power_R2: 0.8
-  density_power_S2: 1.0
   local_single_s2_patch: null
   local_s2_patch_idx: null
+  density_power_R2: 1.0
+  density_power_S2: 1.0
 
 ###############################################################################
-# Metadata
-metadata:
-  run_name: blackhole
-  run_id: null
-  misc: {}
+# Training stages
+training_stages: null
