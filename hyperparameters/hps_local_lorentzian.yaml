@@ -7,7 +7,6 @@
 model:
   experiment: blackhole
 
-  # Fresh local unsupervised model.
   saved_model: false
   saved_model_path: null
   saved_model_weight_noise: 0.0
@@ -29,14 +28,11 @@ geometry:
   n_patches: 1
   einstein_constant: 0.0
 
-  # Kept for base schema compatibility; local_2d_mode does not use overlap.
-  overlap_upperwidth: 0.1
-
 ###############################################################################
 # Data
 data:
   # Keep high enough for stable local Einstein estimates.
-  num_samples: 1000
+  num_samples: 10000
 
 ###############################################################################
 # Loss

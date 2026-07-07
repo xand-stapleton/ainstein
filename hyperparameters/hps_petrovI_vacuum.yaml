@@ -29,9 +29,6 @@ geometry:
   n_patches: 1
   einstein_constant: 0.0
 
-  # Kept for base schema compatibility; embedding mode does not use overlap.
-  overlap_upperwidth: 0.1
-
 ###############################################################################
 # Data
 data:
