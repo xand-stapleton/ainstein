@@ -3,25 +3,6 @@
 ###############################################################################
 
 ###############################################################################
-# Model
-model:
-  experiment: blackhole
-
-  saved_model: false
-  saved_model_path: null
-  saved_model_weight_noise: 0.0
-
-  dtype: float64
-  n_hidden: 128
-  n_layers: 4
-  activations: gelu
-  use_bias: true
-
-  # Sweep scripts set seeds per run.
-  np_seed: null
-  tf_seed: null
-
-###############################################################################
 # Geometry
 geometry:
   dim: 2
@@ -51,19 +32,34 @@ loss:
   trapped_surface_schedule: null
 
 ###############################################################################
+# Model
+model:
+  experiment: blackhole
+
+  saved_model: false
+  saved_model_path: null
+  saved_model_weight_noise: 0.0
+
+  dtype: float64
+  n_hidden: 128
+  n_layers: 4
+  activations: gelu
+  use_bias: true
+
+  np_seed: null
+  tf_seed: null
+
+###############################################################################
 # Training
 training:
   epochs: 100
   batch_size: 512
-
   init_learning_rate: 0.001
   min_learning_rate: 0.00002
-
   use_validation: false
   val_print: false
   num_val_samples: 2000
   val_batch_size: 256
-
   verbosity: 1
 
 ###############################################################################
@@ -71,7 +67,6 @@ training:
 logging:
   log_wandb: false
   wandb_log_freq: 10
-
   log_interim: true
   log_dir: runs
   log_interval: null
@@ -117,7 +112,6 @@ model_specific:
 ###############################################################################
 # Visualisation
 visualisation:
-  # Keep sweep runs lightweight; generate plots in post-processing.
   visualise: false
   num_samples: 4000
   patch_width_R2: 0.85

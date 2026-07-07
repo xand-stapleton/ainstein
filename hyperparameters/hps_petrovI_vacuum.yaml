@@ -3,6 +3,32 @@
 ###############################################################################
 
 ###############################################################################
+# Geometry
+geometry:
+  dim: 4
+  n_patches: 1
+  einstein_constant: 0.0
+
+###############################################################################
+# Data
+data:
+  num_samples: 10000
+
+###############################################################################
+# Loss
+loss:
+  einstein_multiplier: 1.0
+
+  einstein_schedule: null
+  kretschmann_schedule: null
+  r2_det_schedule: null
+  killing_symmetry_schedule: null
+  k_repeller_schedule: null
+  speciality_index_rprofile_schedule: null
+  horizon_anchor_schedule: null
+  trapped_surface_schedule: null
+
+###############################################################################
 # Model
 model:
   experiment: blackhole
@@ -23,47 +49,16 @@ model:
   tf_seed: null
 
 ###############################################################################
-# Geometry
-geometry:
-  dim: 4
-  n_patches: 1
-  einstein_constant: 0.0
-
-###############################################################################
-# Data
-data:
-  num_samples: 10000
-
-###############################################################################
-# Loss
-loss:
-  # Einstein is active in embedding mode.
-  einstein_multiplier: 1.0
-
-  # Loss schedules. Null keeps each multiplier fixed at its base value.
-  einstein_schedule: null
-  kretschmann_schedule: null
-  r2_det_schedule: null
-  killing_symmetry_schedule: null
-  k_repeller_schedule: null
-  speciality_index_rprofile_schedule: null
-  horizon_anchor_schedule: null
-  trapped_surface_schedule: null
-
-###############################################################################
 # Training
 training:
   epochs: 500
   batch_size: 128
-
   init_learning_rate: 0.00005
   min_learning_rate: 0.000002
-
   use_validation: true
   val_print: false
   num_val_samples: 500
   val_batch_size: 100
-
   verbosity: 1
 
 ###############################################################################
@@ -71,7 +66,6 @@ training:
 logging:
   log_wandb: false
   wandb_log_freq: 10
-
   log_interim: true
   log_dir: runs
   log_interval: null
