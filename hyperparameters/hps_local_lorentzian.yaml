@@ -43,13 +43,9 @@ data:
 loss:
   # Einstein-only local training.
   einstein_multiplier: 1.0
-  overlap_multiplier: 0.0
-  finiteness_multiplier: 0.0
 
   # Loss schedules. Null keeps each multiplier fixed at its base value.
   einstein_schedule: null
-  overlap_schedule: null
-  finiteness_schedule: null
   kretschmann_schedule: null
   r2_det_schedule: null
   killing_symmetry_schedule: null
