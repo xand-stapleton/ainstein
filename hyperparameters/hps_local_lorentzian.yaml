@@ -1,57 +1,65 @@
 ###############################################################################
-# Model set-up
-model:
-  experiment: schwarzschild
+# Local Lorentzian hyperparameters
+###############################################################################
 
-  # Start from a fresh model for local unsupervised runs.
+###############################################################################
+# Model
+model:
+  experiment: blackhole
+
+  # Fresh local unsupervised model.
   saved_model: false
   saved_model_path: null
+  saved_model_weight_noise: 0.0
 
-  # float64 is preferred for curvature calculations.
   dtype: float64
-
   n_hidden: 128
   n_layers: 4
   activations: gelu
   use_bias: true
 
-  # Seeds are set by the sweep script per run.
+  # Sweep scripts set seeds per run.
   np_seed: null
   tf_seed: null
 
 ###############################################################################
-# Geometric set-up
+# Geometry
 geometry:
   dim: 2
   n_patches: 1
-
   einstein_constant: 0.0
 
+  # Kept for base schema compatibility; local_2d_mode does not use overlap.
   overlap_upperwidth: 0.1
 
 ###############################################################################
-# Data set-up
+# Data
 data:
-  # Keep this high enough for stable local Einstein estimates.
+  # Keep high enough for stable local Einstein estimates.
   num_samples: 1000
 
 ###############################################################################
-# Loss set-up
+# Loss
 loss:
-  # Local mode request: Einstein loss only.
+  # Einstein-only local training.
   einstein_multiplier: 1.0
   overlap_multiplier: 0.0
   finiteness_multiplier: 0.0
 
-  # Keep multipliers fixed for reproducible lambda comparisons.
+  # Loss schedules. Null keeps each multiplier fixed at its base value.
   einstein_schedule: null
-  kretschmann_schedule: null
-  r2_det_schedule: null
   overlap_schedule: null
   finiteness_schedule: null
+  kretschmann_schedule: null
+  r2_det_schedule: null
+  killing_symmetry_schedule: null
+  k_repeller_schedule: null
+  speciality_index_rprofile_schedule: null
+  horizon_anchor_schedule: null
+  trapped_surface_schedule: null
 
 ###############################################################################
-# Training set-up
+# Training
 training:
   epochs: 100
   batch_size: 512
@@ -67,7 +75,7 @@ training:
   verbosity: 1
 
 ###############################################################################
-# Logging set-up
+# Logging
 logging:
   log_wandb: false
   wandb_log_freq: 10
@@ -75,54 +83,47 @@ logging:
   log_interim: true
   log_dir: runs
   log_interval: null
-
   track_best: true
   save_best_hist: false
-
   log_errors: true
   print_batch_losses: false
 
 ###############################################################################
-# Model-specific parameters
+# Model-specific
 model_specific:
   # Lorentzian signature with the existing indefinite-Cholesky pathway.
   lorentzian: true
 
-  # Local 2D mode: no Schwarzschild embedding and no Penrose pathway.
+  # Local 2D mode bypasses Schwarzschild embedding and Penrose sampling.
   local_2d_mode: true
-
-  # Keep embed false in local 2D mode for clarity.
   embed: false
 
-  # The S2-chart local mode is not used in local_2d_mode.
+  # S2 single-chart controls are inactive in local_2d_mode.
   local_single_s2_patch: false
   local_s2_patch_idx: 0
 
-  # Circle-region limits. In local_2d_mode, patch_width_S2 is used as the
-  # active 2D patch width; patch_width_R2 is ignored.
+  # In local_2d_mode, patch_width_S2 is the active 2D patch width.
   patch_width_R2: 0.85
   patch_width_S2: 1.0
 
-  # In local_2d_mode, density_power_S2 is used as the active 2D sampling
-  # density control; density_power_R2 is ignored.
+  # In local_2d_mode, density_power_S2 is the active 2D sampling control.
   density_power_R2: 1.0
   density_power_S2: 1.0
 
-  density_power_R2_schedule: null
-  density_power_S2_schedule: null
-
-  # Einstein-only local training.
+  # Keep non-Einstein Schwarzschild losses disabled.
   kretschmann_multiplier: 0.0
   r2_det_loss_multiplier: 0.0
 
-  use_area_measure_weight: true
+  # Loss norm conventions.
+  use_volume_scaling: true
   use_metric_contraction: true
-  ricci_kernel: optimised
 
+  # Ricci kernel and mass field are kept for shared Schwarzschild config paths.
+  ricci_kernel: optimised
   m: 1.0
 
 ###############################################################################
-# Visualisation parameters
+# Visualisation
 visualisation:
   # Keep sweep runs lightweight; generate plots in post-processing.
   visualise: false
@@ -132,7 +133,7 @@ visualisation:
   density_power_R2: 1.0
   density_power_S2: 1.0
 
-  # Inherit local mode for plotting by default.
+  # Null means inherit local chart settings from model_specific.
   local_single_s2_patch: null
   local_s2_patch_idx: null
 
@@ -140,3 +141,5 @@ visualisation:
 # Metadata
 metadata:
   run_name: local_lorentzian
+  run_id: null
+  misc: {}

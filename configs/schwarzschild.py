@@ -43,7 +43,6 @@ class SchwarzschildProperties(BaseModel, KerasSerialisableObject):
     penrose_interior_only: bool = False
     kretschmann_multiplier: float = 1.0
     r2_det_loss_multiplier: float = 0.0  # weight for 1/|det(g_R2)| barrier loss
-    speciality_index_multiplier: float = 0.0  # weight for S=1 type-D loss
     killing_symmetry_multiplier: float = 0.0  # weight for SO(3) Killing residual loss
     k_repeller_multiplier: float = 0.0  # weight for 1/(|K|+epsilon) Minkowski-repeller
     k_repeller_epsilon: float = 1e-4    # additive floor in K-repeller denominator
@@ -229,7 +228,6 @@ class SchwarzschildLossConfig(LossConfig, KerasSerialisableObject):
 
     kretschmann_schedule: FloatScheduleConfig | None = None
     r2_det_schedule: FloatScheduleConfig | None = None
-    speciality_index_schedule: FloatScheduleConfig | None = None
     killing_symmetry_schedule: FloatScheduleConfig | None = None
     k_repeller_schedule: FloatScheduleConfig | None = None
     speciality_index_rprofile_schedule: FloatScheduleConfig | None = None
@@ -248,7 +246,6 @@ class SchwarzschildTrainingStage(BaseModel, KerasSerialisableObject):
     einstein_multiplier: float | None = None
     kretschmann_multiplier: float | None = None
     r2_det_loss_multiplier: float | None = None
-    speciality_index_multiplier: float | None = None
     killing_symmetry_multiplier: float | None = None
     k_repeller_multiplier: float | None = None
     speciality_index_rprofile_multiplier: float | None = None
@@ -256,7 +253,6 @@ class SchwarzschildTrainingStage(BaseModel, KerasSerialisableObject):
     einstein_schedule: FloatScheduleConfig | None = None
     kretschmann_schedule: FloatScheduleConfig | None = None
     r2_det_schedule: FloatScheduleConfig | None = None
-    speciality_index_schedule: FloatScheduleConfig | None = None
     killing_symmetry_schedule: FloatScheduleConfig | None = None
     k_repeller_schedule: FloatScheduleConfig | None = None
     speciality_index_rprofile_schedule: FloatScheduleConfig | None = None

@@ -397,7 +397,6 @@ def is_supervised_run(run_dir: Path, config: SchwarzschildConfig) -> bool:
     multipliers = [
         getattr(config.loss, "einstein_multiplier", 0.0),
         getattr(config.model_specific, "kretschmann_multiplier", 0.0),
-        getattr(config.model_specific, "speciality_index_multiplier", 0.0),
         getattr(config.model_specific, "killing_symmetry_multiplier", 0.0),
         getattr(config.model_specific, "k_repeller_multiplier", 0.0),
         getattr(config.model_specific, "speciality_index_rprofile_multiplier", 0.0),

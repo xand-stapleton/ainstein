@@ -35,7 +35,7 @@ class SchwarzschildTrainerRunner(BaseTrainerRunner):
         **kwargs,
     ):
         super().__init__(*args, **kwargs, config_class=SchwarzschildConfig)
-        self._initialize_wandb("Ainstein_schwarzschild")
+        self._initialize_wandb("Ainstein_blackhole")
         self.supervised_model = None
 
         if supervised and self._is_local_2d_mode():
@@ -380,7 +380,6 @@ class SchwarzschildTrainerRunner(BaseTrainerRunner):
             "einstein_schedule",
             "kretschmann_schedule",
             "r2_det_schedule",
-            "speciality_index_schedule",
             "killing_symmetry_schedule",
             "k_repeller_schedule",
             "speciality_index_rprofile_schedule",
@@ -393,7 +392,6 @@ class SchwarzschildTrainerRunner(BaseTrainerRunner):
         model_specific_fields = (
             "kretschmann_multiplier",
             "r2_det_loss_multiplier",
-            "speciality_index_multiplier",
             "killing_symmetry_multiplier",
             "k_repeller_multiplier",
             "speciality_index_rprofile_multiplier",

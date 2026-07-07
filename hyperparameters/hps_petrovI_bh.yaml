@@ -1,62 +1,123 @@
+###############################################################################
+# Petrov type-I black-hole search hyperparameters
+###############################################################################
+
+###############################################################################
+# Model
 model:
-  experiment: schwarzschild
+  experiment: blackhole
+
   saved_model: false
   saved_model_path: null
+  saved_model_weight_noise: 0.0
+
   dtype: float64
   n_hidden: 256
   n_layers: 6
   activations: gelu
   use_bias: true
+
   np_seed: 123
   tf_seed: 123
+
+###############################################################################
+# Geometry
 geometry:
   dim: 4
   n_patches: 1
   einstein_constant: 0.0
+
+  # Kept for base schema compatibility; embedding mode does not use overlap.
   overlap_upperwidth: 0.1
+
+###############################################################################
+# Data
 data:
   num_samples: 80
+
+###############################################################################
+# Loss
 loss:
   einstein_multiplier: 1.0
   overlap_multiplier: 0.0
   finiteness_multiplier: 0.0
-  trapped_surface_schedule:
-    strategy: constant
-    warmup_epochs: 5
+
+  # Loss schedules. Null keeps each multiplier fixed at its base value.
+  einstein_schedule: null
+  overlap_schedule: null
+  finiteness_schedule: null
+  kretschmann_schedule: null
+  r2_det_schedule: null
+  killing_symmetry_schedule: null
+  k_repeller_schedule: null
+  speciality_index_rprofile_schedule: null
+  horizon_anchor_schedule: null
+  trapped_surface_schedule: null
+
+###############################################################################
+# Training
 training:
   epochs: 10
   batch_size: 5
+
   init_learning_rate: 0.0003
-  min_learning_rate: 3.0e-06
+  min_learning_rate: 0.000003
+
   use_validation: false
+  val_print: false
+  num_val_samples: 500
+  val_batch_size: 100
+
   verbosity: 1
+
+###############################################################################
+# Logging
 logging:
   log_wandb: false
+  wandb_log_freq: 10
+
   log_interim: true
   log_dir: runs
+  log_interval: null
   track_best: true
+  save_best_hist: false
+  log_errors: true
+  print_batch_losses: false
+
+###############################################################################
+# Model-specific
 model_specific:
+  # Signature and architecture.
   lorentzian: true
   embed: true
   m: 1.0
-  use_penrose_region_curriculum: false
+
+  # Penrose R2 and stereographic S2 sampling controls.
   patch_width_R2: 0.85
   patch_width_S2: 1.0
   density_power_R2: 1.0
   density_power_S2: 1.0
+  use_penrose_region_curriculum: false
+
+  # Einstein loss form.
   einstein_loss_mode: weyl_normalized
   curvature_norm_epsilon: 0.001
-  speciality_index_rprofile_multiplier: 1.0
+
+  # Petrov profile target.
   speciality_index_rprofile_mode: profile
   speciality_index_rprofile_centre: 2.0
+  speciality_index_rprofile_multiplier: 1.0
   speciality_index_rprofile_epsilon: 0.01
+
+  # Non-degeneracy and curvature anchors.
   r2_det_loss_multiplier: 0.075
   det_barrier_mode: both_blocks
   horizon_anchor_multiplier: 3.0
   horizon_anchor_target: 1.7320508075688772
   horizon_anchor_band: 0.1
   horizon_anchor_invariant: weyl_i
-  kretschmann_sqrt_epsilon: 1.0e-12
+
+  # Trapped-surface prescriber.
   trapped_surface_multiplier: 25.0
   trapped_surface_margin_mode: profile
   trapped_surface_margin_slope: 1.0
@@ -64,16 +125,36 @@ model_specific:
   trapped_surface_band: 0.1
   trapped_surface_margin: 0.0
   trapped_surface_horizon_weight: 1.0
+
+  # Disabled Schwarzschild/type-D losses.
   kretschmann_multiplier: 0.0
   k_repeller_multiplier: 0.0
   killing_symmetry_multiplier: 0.0
-  speciality_index_multiplier: 0.0
+
+  # Loss norm conventions.
   use_volume_scaling: false
   use_metric_contraction: false
+
+  # Ricci/Kretschmann kernel and curvature-loss convention.
   ricci_kernel: optimised
   kretschmann_loss_mode: log_profile
+  kretschmann_sqrt_epsilon: 1.0e-12
+
+###############################################################################
+# Visualisation
 visualisation:
   visualise: false
   num_samples: 4000
+  patch_width_R2: 0.8
+  patch_width_S2: 1.0
+  density_power_R2: 1.0
+  density_power_S2: 1.0
+  local_single_s2_patch: null
+  local_s2_patch_idx: null
+
+###############################################################################
+# Metadata
 metadata:
   run_name: c7c_f08_t25_s123
+  run_id: null
+  misc: {}

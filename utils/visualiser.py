@@ -15,7 +15,7 @@ def _experiment_name(run_dir: Path) -> str:
     return (
         config.get("model", {}).get("experiment")
         or config.get("experiment")
-        or "schwarzschild"
+        or "blackhole"
     ).lower()
 
 
@@ -36,7 +36,7 @@ def visualise_directory(root: Path | str) -> None:
             experiment = _experiment_name(run_dir)
             print(f"Processing {run_dir} ({experiment})")
 
-            if experiment == "schwarzschild":
+            if experiment in ("blackhole", "schwarzschild"):
                 _run_schwarzschild(run_dir)
             else:
                 print(f"Skipping {run_dir}: no batch visualiser registered for {experiment}")

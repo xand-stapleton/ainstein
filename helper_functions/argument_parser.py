@@ -223,11 +223,6 @@ def get_args():
         help="Multiplier factor for the R2 determinant barrier loss",
     )
     parser.add_argument(
-        "--speciality_index_multiplier",
-        type=float,
-        help="Multiplier factor for the speciality-index S=1 type-D loss",
-    )
-    parser.add_argument(
         "--k_repeller_multiplier",
         type=float,
         help="Multiplier factor for the K-repeller loss",
@@ -429,37 +424,6 @@ def get_args():
         type=int,
         dest="r2_det_schedule_steps",
         help="Number of steps for R2 determinant multiplier schedule",
-    )
-
-    parser.add_argument(
-        "--speciality_index_schedule.strategy",
-        type=str,
-        dest="speciality_index_schedule_strategy",
-        help="Schedule strategy for speciality-index multiplier",
-    )
-    parser.add_argument(
-        "--speciality_index_schedule.final_value",
-        type=float,
-        dest="speciality_index_schedule_final_value",
-        help="Final value for speciality-index multiplier schedule",
-    )
-    parser.add_argument(
-        "--speciality_index_schedule.warmup_epochs",
-        type=int,
-        dest="speciality_index_schedule_warmup_epochs",
-        help="Warmup epochs for speciality-index multiplier schedule",
-    )
-    parser.add_argument(
-        "--speciality_index_schedule.decay_rate",
-        type=float,
-        dest="speciality_index_schedule_decay_rate",
-        help="Decay rate for speciality-index multiplier schedule",
-    )
-    parser.add_argument(
-        "--speciality_index_schedule.steps",
-        type=int,
-        dest="speciality_index_schedule_steps",
-        help="Number of steps for speciality-index multiplier schedule",
     )
 
     parser.add_argument(

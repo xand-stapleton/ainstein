@@ -1,164 +1,139 @@
-### Hyperparameters for the AInstein metric training runs ###
-
-# Hyperparameter are sorted according to: Geometric, Data, Loss, Model,
-# Training, and Logging. Edit their values, restart kernels, and run the 
-# respective run.py or run_supervised.py files to train metrics.
-
-experiment: sphere
 ###############################################################################
-# Geometric set-up
-# Dimensionality of the data (e.g., 2 for 2D data)
-dim: 2
-
-# Set the number of patches (current functionality for 1 or 2)
-n_patches: 2
-
-# Set whether the spacetime is Lorentizian
-lorentzian: false
-
-# Einstein constant, $\lambda$, in Einstein eqn: $R_{ij} = \lambda g_{ij}$
-einstein_constant: 1.0
-
-# Patching size
-# ...determines the distance from the radial midpoint to the outer edge of the 
-# overlap region within the ball patches
-overlap_upperwidth: 0.1 
-
-###############################################################################
-# Data set-up
-# Sampling patch shape 
-# ...true => ball, false => cube (cube functionality limited)
-ball: true
-
-# The 1d size of the patch (radii for ball, width for cube) 
-patch_width: 1. 
-
-# The \alpha factor in the sampling Beta function
-# ...values <1 skew to extremeties, >1 skew to radial midpoint
-density_power: 4.
-
-# Number of samples to generate for training
-num_samples: 10000
-
-###############################################################################
-# Loss set-up
-# Multiplier values for the loss contributions
-einstein_multiplier: 1.0
-overlap_multiplier: 10.0   
-finiteness_multiplier: 1.0  
-
-# Optional multiplier scheduling. Uncomment and customize to enable scheduling
-# for each loss term. Each scheduler supports: constant, linear, exponential,
-# cosine, step
-# 
-# Example: Linear decay of finiteness_multiplier from 1.0 to 0.1 over training
-# finiteness_schedule:
-#   strategy: linear
-#   final_value: 0.1
-#   warmup_epochs: 5
-#   decay_rate: 0.96
-#   step_size: 5
+# Sphere hyperparameters
 #
-# Example: Step schedule for overlap_multiplier with 2 decay steps
-# overlap_schedule:
-#   strategy: step
-#   decay_rate: 0.5
-#   steps: 2
-#
-# Example: Cosine annealing of einstein_multiplier
-# einstein_schedule:
-#   strategy: cosine
-#   final_value: 0.5
-#   warmup_epochs: 0
-#
-# See network/schedulers.py::FloatScheduler for full documentation
-
-finiteness_schedule: null
-einstein_schedule: null
-overlap_schedule: null
-
-# Finiteness filter hyperparameters
-# Centre of the minimum
-finite_centre: 25 
-# Width of the minimum
-finite_width: 25 
-# Sharpness of the curve at the boundary of the minimum region
-finite_sharpness: 20 
-# Height of the "walls" around the minimum
-finite_height: 1000 
-# Slope of the lines which start at the top of the "walls"
-finite_slope: 0.2 
+# Standard section order:
+# model, geometry, data, loss, finiteness, training, logging, model_specific,
+# visualisation, metadata.
+###############################################################################
 
 ###############################################################################
-# Model set-up
-# Import a saved model instead of initiating a new one (null means randomly initialise)
-saved_model: true
-saved_model_path: seed_models/I_2d2p.keras
-# ...the below are ignored if `saved_model` is true and a model is imported
+# Model
+model:
+  experiment: sphere
 
-# Floating-point dtype (float64 for physics accuracy; float32 to use GPU on macOS)
-dtype: float64
+  # Load a saved model instead of creating a new one.
+  saved_model: true
+  saved_model_path: seed_models/I_2d2p.keras
+  saved_model_weight_noise: 0.0
 
-# Number of hidden units in each layer
-n_hidden: 128
+  # Network definition. When saved_model is true, these are restored from the
+  # saved model where the loader requires architectural consistency.
+  dtype: float64
+  n_hidden: 128
+  n_layers: 4
+  activations: gelu
+  use_bias: true
 
-# Number of layers in the neural network
-n_layers: 4
-
-# Activation function to use in the neural network (e.g., gelu, relu)
-activations: gelu
-
-# Whether to use bias terms in the neural network layers
-use_bias: true
-
-# Seeds
-np_seed: null
-tf_seed: null
+  # Random seeds. Null lets the runner create and record seeds.
+  np_seed: null
+  tf_seed: null
 
 ###############################################################################
-# Training set-up
-# Number of training epochs
-epochs: 100
+# Geometry
+geometry:
+  # Manifold dimension and atlas size.
+  dim: 2
+  n_patches: 2
 
-# Batch size for training
-batch_size: 100
+  # Einstein equation convention: Ric_ij = lambda * g_ij.
+  einstein_constant: 1.0
 
-# Learning rate for the optimizer
-init_learning_rate: 0.005
-min_learning_rate: 0.0005
-
-# Validation hyperparameters
-use_validation: true
-val_print: false
-num_val_samples: 500
-val_batch_size: 100
-
-# Verbosity level for print epoch logging
-verbosity: 1
+  # Distance from the radial midpoint to the outer edge of the overlap region.
+  overlap_upperwidth: 0.1
 
 ###############################################################################
-#Logging set-up
-# Enable or disable logging to Weights and Biases (WandB)
-log_wandb: true
-wandb_log_freq: 10
+# Data
+data:
+  # Patch radius for ball samples or width for cube samples.
+  patch_width: 1.0
 
-# Whether to log interim results during training (best or scheduled). Setting
-# to false disables all file save logging
-log_interim: true
+  # Number of training samples generated per refresh.
+  num_samples: 10000
 
-# Directory where logs and other outputs will be saved
-log_dir: 'runs' #...set_the_filepath_here
-# Setting log_interval to null disables scheduled logging (but allows for best
-# loss tracking), else log each `log_interim` epochs
-log_interval: null
-# Track the best loss as training evolves?
-track_best: true
-# Save the historical best losses? Setting to false overwrites the previous
-# best loss for the run
-save_best_hist: false
-# Log batches and model when numerical errors occur?
-log_errors: true
+###############################################################################
+# Loss
+loss:
+  # Base loss multipliers.
+  einstein_multiplier: 1.0
+  overlap_multiplier: 10.0
+  finiteness_multiplier: 1.0
 
-# Whether to print a breakdown of individual loss terms with each training step
-print_batch_losses: false
+  # Loss schedules. Null keeps each multiplier fixed at its base value.
+  einstein_schedule: null
+  overlap_schedule: null
+  finiteness_schedule: null
+  kretschmann_schedule: null
+  r2_det_schedule: null
+  killing_symmetry_schedule: null
+  k_repeller_schedule: null
+  speciality_index_rprofile_schedule: null
+  horizon_anchor_schedule: null
+  trapped_surface_schedule: null
 
+###############################################################################
+# Finiteness
+finiteness:
+  # Soft well parameters for penalising metric components outside a finite band.
+  finite_centre: 25
+  finite_width: 25
+  finite_sharpness: 20
+  finite_height: 1000
+  finite_slope: 0.2
+
+###############################################################################
+# Training
+training:
+  epochs: 100
+  batch_size: 100
+
+  # Polynomial learning-rate decay endpoint.
+  init_learning_rate: 0.005
+  min_learning_rate: 0.0005
+
+  # Validation sample and reporting controls.
+  use_validation: true
+  val_print: false
+  num_val_samples: 500
+  val_batch_size: 100
+
+  # Epoch logging cadence; 0 disables progress messages.
+  verbosity: 1
+
+###############################################################################
+# Logging
+logging:
+  log_wandb: true
+  wandb_log_freq: 10
+
+  # File logging. Null log_interval keeps best-model logging only.
+  log_interim: true
+  log_dir: runs
+  log_interval: null
+  track_best: true
+  save_best_hist: false
+  log_errors: true
+  print_batch_losses: false
+
+###############################################################################
+# Model-specific
+model_specific:
+  # Ball sampling is the supported sphere path; cube sampling is limited.
+  ball: true
+
+  # Beta sampling shape: < 1 skews toward boundaries, > 1 toward the midpoint.
+  density_power: 4.0
+
+  # Signature flag for analytic/loss paths.
+  lorentzian: false
+
+###############################################################################
+# Visualisation
+visualisation:
+  visualise: true
+
+###############################################################################
+# Metadata
+metadata:
+  run_name: sphere
+  run_id: null
+  misc: {}

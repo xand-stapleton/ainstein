@@ -41,7 +41,7 @@ def _load_yaml(path: Path) -> dict:
 
 def _is_local_schwarzschild_config(hps: dict) -> bool:
     model = hps.get("model", {})
-    if model.get("experiment") != "schwarzschild":
+    if model.get("experiment") not in ("blackhole", "schwarzschild"):
         return False
     model_specific = hps.get("model_specific", {})
     return bool(

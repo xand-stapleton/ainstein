@@ -7,7 +7,7 @@ from pathlib import Path
 import wandb
 
 entity = "logml"
-project = "Ainstein_schwarzschild"
+project = "Ainstein_blackhole"
 dst_folder = f"{project}-failed_runs_logs"
 
 # Initialize a W&B API client

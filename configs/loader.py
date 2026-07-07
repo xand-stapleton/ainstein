@@ -20,7 +20,6 @@ SECTION_MAP = {
     "kretschmann_multiplier": "model_specific",
     "k_repeller_multiplier": "model_specific",
     "k_repeller_epsilon": "model_specific",
-    "speciality_index_multiplier": "model_specific",
     "speciality_index_rprofile_mode": "model_specific",
     "speciality_index_rprofile_centre": "model_specific",
     "speciality_index_rprofile_multiplier": "model_specific",
@@ -165,7 +164,6 @@ def apply_runtime_overrides(config_dict, runtime_config):
         "kretschmann_schedule": "loss",
         "r2_det_schedule": "loss",
         "k_repeller_schedule": "loss",
-        "speciality_index_schedule": "loss",
         "speciality_index_rprofile_schedule": "loss",
         "density_power_R2_schedule": "model_specific",
         "density_power_S2_schedule": "model_specific",
@@ -206,9 +204,9 @@ def apply_runtime_overrides(config_dict, runtime_config):
             config_dict.setdefault(section, {})[schedule_name] = schedule_info["params"]
 
 
-def find_config_class(name: Literal["sphere", "schwarzschild", "lens"]):
+def find_config_class(name: Literal["sphere", "blackhole", "schwarzschild", "lens"]):
     match name.lower():
-        case "schwarzschild":
+        case "blackhole" | "schwarzschild":
             from configs.schwarzschild import SchwarzschildConfig
 
             return SchwarzschildConfig

@@ -200,8 +200,8 @@ class FiniteLoss:
             self.dim = self.config.geometry.dim
 
     def compute(self, x_vars, metric_pred):
-        ### HACKY WORKAROUND for Schwarzschild ###
-        if self.config.model.experiment == "schwarzschild":
+        ### HACKY WORKAROUND for black-hole/Schwarzschild runs ###
+        if self.config.model.experiment in ("blackhole", "schwarzschild"):
             param_a, param_b = 2, 0.1
             # Reduce to submanifold, and take \sum|g|
             if self.submanifold_is_R2:

@@ -1,135 +1,64 @@
 ###############################################################################
-# Model set-up
-model:
-  # Experiment name
-  experiment: schwarzschild
+# Schwarzschild search hyperparameters
+###############################################################################
 
-  # Import a saved model instead of initiating a new one (null means randomly initialise)
-  # IL_embed.keras is a coarse 5D-ambient SchwarzschildGlobalModel seed. It is
-  # further from the final unsupervised solution than the va* polished runs, so
-  # this config uses a longer, staged continuation.
+###############################################################################
+# Model
+model:
+  experiment: blackhole
+
+  # Coarse 5D-ambient SchwarzschildGlobalModel seed. This config uses a staged
+  # continuation because the seed is not a polished unsupervised solution.
   saved_model: true
   saved_model_path: seed_models/IL_embed.keras
-  # ...the below are ignored if `saved_model` is true and a model is imported
+  saved_model_weight_noise: 0.0
 
-  # Floating-point dtype (float64 for physics accuracy; float32 to use GPU on macOS)
   dtype: float64
-
-  # Number of hidden units in each layer
   n_hidden: 128
-
-  # Number of layers in the neural network
   n_layers: 4
-
-  # Activation function to use in the neural network (e.g., gelu, relu)
   activations: gelu
-
-  # Whether to use bias terms in the neural network layers
   use_bias: true
 
-  # Seeds
   np_seed: null
   tf_seed: null
 
 ###############################################################################
-# Geometric set-up
+# Geometry
 geometry:
-  # Dimensionality of the manifold
   dim: 4
-
-  # Set the number of patches (1 = global embedding, no overlap)
   n_patches: 1
-
-  # Einstein constant, $\lambda$, in Einstein eqn: $R_{ij} = \lambda g_{ij}$
   einstein_constant: 0.0
 
-  # Patching size
-  # ...determines the distance from the radial midpoint to the outer edge of the 
-  # overlap region within the stereographic patches
-  overlap_upperwidth: 0.1
-
 ###############################################################################
-# Data set-up
+# Data
 data:
-  # Number of samples to generate for training
-  num_samples: 100
+  num_samples: 10000
 
 ###############################################################################
-# Loss set-up
+# Loss
 loss:
-  # Multiplier values for the loss contributions
-  # overlap and finiteness losses are not used in the embedding architecture
+  # Overlap and finiteness are inactive in the embedding architecture.
   einstein_multiplier: 0.35
   overlap_multiplier: 0.0
   finiteness_multiplier: 0.0
-  
-  # Optional multiplier scheduling (null = no scheduling)
-  # Supported strategies: constant, linear, exponential, cosine, step
-  # 
-  # See network/schedulers.py::FloatScheduler for full documentation
-  # Start by fitting the curvature scale, then hand control to the
-  # positive-definite Einstein norm.
-  einstein_schedule:
-    strategy: cosine
-    final_value: 4.0
-    warmup_epochs: 0
-    decay_rate: 0.96
-    steps: 1
-  kretschmann_schedule:
-    strategy: cosine
-    final_value: 1.25
-    warmup_epochs: 0
-    decay_rate: 0.96
-    steps: 1
-  # Keep the determinant barrier active throughout.  The positive Einstein norm
-  # fixed the Ricci-scale issue, but honest-paper collapsed toward a degenerate
-  # R2 block once this term dropped to ~0.
-  r2_det_schedule:
-    strategy: cosine
-    final_value: 0.005
-    warmup_epochs: 0
-    decay_rate: 0.96
-    steps: 1
-  speciality_index_schedule: null
-  killing_symmetry_schedule:
-    strategy: cosine
-    final_value: 2.5
-    warmup_epochs: 0
-    decay_rate: 0.96
-    steps: 1
-  k_repeller_schedule: null
-  speciality_index_rprofile_schedule: null
+
+  # Loss schedules. Null keeps each multiplier fixed at its base value.
+  einstein_schedule: null
   overlap_schedule: null
   finiteness_schedule: null
+  kretschmann_schedule: null
+  r2_det_schedule: null
+  killing_symmetry_schedule: null
+  k_repeller_schedule: null
+  speciality_index_rprofile_schedule: null
+  horizon_anchor_schedule: null
+  trapped_surface_schedule: null
 
 ###############################################################################
-# Training set-up
-training:
-  # Number of training epochs
-  epochs: 10
-
-  # Batch size for training
-  batch_size: 25
-
-  # Learning rate for the optimizer
-  init_learning_rate: 0.0003
-  min_learning_rate: 0.000003
-
-  # Validation hyperparameters
-  use_validation: true
-  val_print: false
-  num_val_samples: 200
-  val_batch_size: 100
-
-  # Verbosity level for print logging (e.g., 0 for silent, 1 for progress messages)
-  verbosity: 1
-
-###############################################################################
-# Staged training
+# Training stages
 #
-# Stage 1 is the global geometric fit. Stage 2 keeps the same geometric loss
-# convention and only changes sampling/LR so it polishes black-hole and
-# white-hole near-singularity behaviour without overwriting the stage-1 solution.
+# Stage 1 is the global geometric fit. Stage 2 changes sampling and learning
+# rate to polish interior behaviour without replacing the stage-1 solution.
 training_stages:
   - name: global_geometric_fit
     epochs: 300
@@ -142,42 +71,23 @@ training_stages:
     min_learning_rate: 0.000001
 
     einstein_multiplier: 6.0
-    einstein_schedule:
-      strategy: constant
-      final_value: 6.0
-      warmup_epochs: 0
-      decay_rate: 0.96
-      steps: 1
+    einstein_schedule: null
+
     kretschmann_multiplier: 6.0
-    kretschmann_schedule:
-      strategy: constant
-      final_value: 6.0
-      warmup_epochs: 0
-      decay_rate: 0.96
-      steps: 1
+    kretschmann_schedule: null
+
     r2_det_loss_multiplier: 0.01
-    r2_det_schedule:
-      strategy: constant
-      final_value: 0.01
-      warmup_epochs: 0
-      decay_rate: 0.96
-      steps: 1
+    r2_det_schedule: null
+
     killing_symmetry_multiplier: 1.5
-    killing_symmetry_schedule:
-      strategy: constant
-      final_value: 1.5
-      warmup_epochs: 0
-      decay_rate: 0.96
-      steps: 1
+    killing_symmetry_schedule: null
 
     use_volume_scaling: true
-    use_area_measure_weight: true
     use_metric_contraction: true
     volume_scaling_loss_components:
       einstein: true
       kretschmann: true
       r2_det: true
-      speciality_index: true
       killing_symmetry: true
       k_repeller: true
       speciality_index_rprofile: true
@@ -185,19 +95,13 @@ training_stages:
       einstein: true
       kretschmann: false
       r2_det: false
-      speciality_index: false
       killing_symmetry: true
       k_repeller: false
       speciality_index_rprofile: true
 
     patch_width_R2: 0.85
     density_power_R2: 0.25
-    density_power_R2_schedule:
-      strategy: constant
-      final_value: 0.25
-      warmup_epochs: 0
-      decay_rate: 0.96
-      steps: 1
+    density_power_R2_schedule: null
 
     use_penrose_region_curriculum: true
     penrose_interior_only: true
@@ -213,71 +117,54 @@ training_stages:
     penrose_region_singularity_width: 0.14
 
 ###############################################################################
-# Logging set-up
+# Training
+training:
+  epochs: 10
+  batch_size: 25
+
+  init_learning_rate: 0.0003
+  min_learning_rate: 0.000003
+
+  use_validation: true
+  val_print: false
+  num_val_samples: 200
+  val_batch_size: 100
+
+  verbosity: 1
+
+###############################################################################
+# Logging
 logging:
-  # Enable or disable logging to Weights and Biases (WandB)
   log_wandb: false
   wandb_log_freq: 10
 
-  # Whether to log interim results during training (best or scheduled). Setting
-  # to false disables all file save logging
   log_interim: true
-
-  # Directory where logs and other outputs will be saved
-  log_dir: 'runs'
-
-  # Setting log_interval to null disables scheduled logging (but allows for best
-  # loss tracking), else log each `log_interim` epochs
+  log_dir: runs
   log_interval: null
-
-  # Track the best loss as training evolves?
   track_best: true
-
-  # Save the historical best losses? Setting to false overwrites the previous
-  # best loss for the run
   save_best_hist: false
-
-  # Log batches and model when numerical errors occur?
   log_errors: true
-
-  # Whether to print a breakdown of individual loss terms with each training step
   print_batch_losses: false
 
 ###############################################################################
-# Model-specific parameters
+# Model-specific
 model_specific:
-  # Set whether the spacetime is Lorentizian
+  # Signature and architecture.
   lorentzian: true
-
-  # Use the global S^2-embedding architecture (single network, no atlas patches)
   embed: true
+  m: 1.0
 
-  # Scaling of the patch sample limits (1 indicates full patch)
+  # Penrose R2 and stereographic S2 sampling controls.
   patch_width_R2: 0.85
   patch_width_S2: 1.0
-
-  # The \alpha factor in the sampling Beta function
-  # ...for R2: values < 1 => closer to boundaries, values > 1 => closer to origin
-  # ...for S2: values < 1 => closer to extremeties, values > 1 => closer to radial midpoint
   density_power_R2: 1.1
   density_power_S2: 1.0
-
-  # Optional density-power schedules. Set to null to keep the initial values fixed.
-  # The same scheduler modes are supported as for loss multipliers, including step.
-  # Move from a broad/central Penrose sample toward boundary-heavy samples.
-  # The late phase gives more attention to singularity-side interior behaviour.
-  density_power_R2_schedule:
-    strategy: linear
-    final_value: 0.65
-    warmup_epochs: 0
-    decay_rate: 0.96
-    steps: 1
+  density_power_R2_schedule: null
   density_power_S2_schedule: null
 
-  # Opt-in Penrose region curriculum.  Early training sees more exterior and
-  # horizon points; late training remains global but spends more samples in the
-  # difficult black/white-hole interior and singularity-side bands.
+  # Curriculum shifts attention toward black/white-hole interior bands.
   use_penrose_region_curriculum: true
+  penrose_interior_only: false
   penrose_region_exterior_start: 0.45
   penrose_region_interior_start: 0.30
   penrose_region_horizon_start: 0.20
@@ -289,63 +176,49 @@ model_specific:
   penrose_region_horizon_width: 0.06
   penrose_region_singularity_width: 0.10
 
-  # Multiplier for the Kretschmann loss
+  # Schwarzschild embedding loss terms.
   kretschmann_multiplier: 3.5
-
-  # Multiplier for the speciality-index S=1 type-D loss (0 = disabled).
-  # This Schwarzschild trial is constrained by Einstein + Kretschmann + R2Det
-  # and explicit SO(3) Killing symmetry.
-  speciality_index_multiplier: 0.0
+  r2_det_loss_multiplier: 0.075
   killing_symmetry_multiplier: 1.0
   k_repeller_multiplier: 0.0
   speciality_index_rprofile_multiplier: 0.0
 
-  # Weight each per-sample loss norm by sqrt(abs(det(g))) as the volume element.
+  # Loss norm conventions.
   use_volume_scaling: true
-  # Legacy alias retained for older scripts/configs.
-  use_area_measure_weight: true
-
-  # Contract tensor/vector loss norms with the inverse metric.
   use_metric_contraction: true
   volume_scaling_loss_components:
     einstein: true
     kretschmann: true
     r2_det: true
-    speciality_index: true
     killing_symmetry: true
     k_repeller: true
     speciality_index_rprofile: true
   metric_contraction_loss_components:
-    # Scalar invariant/barrier losses do not have tensor indices to contract.
     einstein: true
     kretschmann: false
     r2_det: false
-    speciality_index: false
     killing_symmetry: true
     k_repeller: false
     speciality_index_rprofile: true
 
-  # Ricci/Kretschmann computation: "standard" (reverse-mode, slower) or "optimised"  (forward-mode, faster)
+  # Ricci/Kretschmann kernel: standard reverse-mode or optimised forward-mode.
   ricci_kernel: optimised
 
-  # Multiplier for the R2 determinant finiteness barrier loss (0 = disabled)
-  r2_det_loss_multiplier: 0.075
-
-  # Schwarzschild mass parameter
-  m: 1.0
-
 ###############################################################################
-# Visualisation parameters
+# Visualisation
 visualisation:
   visualise: true
   num_samples: 1000
   patch_width_R2: 0.8
   patch_width_S2: 1.0
-  # ...the \alpha (>0) value in the beta
-  # function, values < 1 skew to boundary, >1
-  # skew to centre
   density_power_R2: 0.8
-  # ...the \alpha (>0) value in the beta
-  # function, values < 1 skew to extremeties,
-  # >1 skew to radial midpoint
   density_power_S2: 1.0
+  local_single_s2_patch: null
+  local_s2_patch_idx: null
+
+###############################################################################
+# Metadata
+metadata:
+  run_name: blackhole
+  run_id: null
+  misc: {}

@@ -140,7 +140,6 @@ _LOSS_COMPONENTS = frozenset(
         "einstein",
         "kretschmann",
         "r2_det",
-        "speciality_index",
         "killing_symmetry",
         "k_repeller",
         "speciality_index_rprofile",
@@ -786,75 +785,6 @@ def _rho_constant_summary(
     }
 
 
-class SpecialityIndexLossEmbed:
-    """
-    Speciality-index type-D loss for the S^2-embedding architecture.
-
-    Computes the complex speciality index S = 27 J^2 / I^3 from the
-    self-dual Weyl tensor.  The supplied I and J are the standard complex Weyl
-    invariants, with Schwarzschild/type-D giving S = 1.
-
-    Loss = mean_weighted( (S - 1)^2 )
-
-    Points with near-zero I are masked out to avoid numerical blow-up.
-    """
-
-    _WEYL_FLOOR: float = 1e-6  # mask points with |I| below this threshold
-    _EPS_WEYL: float = 1e-12  # additive guard in denominator
-
-    def __init__(
-        self, config: SchwarzschildConfig, weighter: WeightSchwarzschild
-    ) -> None:
-        self.config = config
-        self.weighter = weighter
-        self.use_volume_scaling = _use_component_volume_scaling(
-            config, "speciality_index"
-        )
-
-    def compute_from_precomputed(
-        self,
-        x_vars: tf.Tensor,
-        weyl_i: tf.Tensor,
-        weyl_j: tf.Tensor,
-        metric_pred_mat: tf.Tensor,
-    ) -> tf.Tensor:
-        """
-        Args:
-            x_vars:             (batch, 5) input coordinates.
-            weyl_i:             (batch,) complex Weyl invariant I.
-            weyl_j:             (batch,) complex Weyl invariant J.
-            metric_pred_mat:    (batch, 4, 4) metric; used for area-measure weight.
-        Returns:
-            Scalar loss value.
-        """
-        real_dtype = tf.math.real(weyl_i).dtype
-        eps_weyl = tf.cast(self._EPS_WEYL, real_dtype)
-        weyl_floor = tf.cast(self._WEYL_FLOOR, real_dtype)
-
-        weyl_i_abs = tf.abs(weyl_i)  # (batch,)
-        speciality_index = speciality_index_from_invariants(
-            weyl_i, weyl_j, eps_weyl
-        )
-
-        # Mask out near-flat points where S is numerically unreliable.
-        valid = weyl_i_abs > weyl_floor  # (batch,) bool
-        n_valid = tf.reduce_sum(tf.cast(valid, tf.int32))
-        if tf.equal(n_valid, 0):
-            return tf.cast(0.0, real_dtype)
-
-        # Squared deviation from the Schwarzschild/type-D value.
-        target = tf.cast(_SPECIALITY_INDEX_SCHWARZSCHILD, weyl_i.dtype)
-        norm = tf.square(tf.abs(speciality_index - target))  # (batch,)
-        norm = tf.where(valid, norm, tf.zeros_like(norm))  # zero masked points
-
-        norm = _apply_volume_scaling(norm, metric_pred_mat, self.use_volume_scaling)
-        norm = self.weighter._weight_patch(x_vars, norm)
-
-        # Average only over valid points.
-        n_valid_f = tf.cast(n_valid, norm.dtype)
-        return tf.reduce_sum(norm) / n_valid_f
-
-
 class KillingSymmetryLossEmbed:
     """SO(3) spherical-symmetry loss from finite-difference Lie derivatives.
 
@@ -1183,7 +1113,7 @@ class SpecialityIndexRProfileLoss:
     Points with near-zero I are masked to avoid numerical blow-up.
     """
 
-    _WEYL_FLOOR: float = 1e-6  # same masking threshold as SpecialityIndexLossEmbed
+    _WEYL_FLOOR: float = 1e-6  # mask points with |I| below this threshold
     _EPS_WEYL: float = 1e-12  # additive guard in I^3 denominator
     _GRAD_POWER_CAP: float = 1.0
     _PROFILE_AMPLITUDE: float = 0.25
@@ -1414,9 +1344,6 @@ class TotalSchwarzschildLoss:
         self.r2_det_loss_multiplier_base = getattr(
             config.model_specific, "r2_det_loss_multiplier", 0.0
         )
-        self.speciality_index_multiplier_base = getattr(
-            config.model_specific, "speciality_index_multiplier", 0.0
-        )
         self.killing_symmetry_multiplier_base = getattr(
             config.model_specific, "killing_symmetry_multiplier", 0.0
         )
@@ -1437,7 +1364,6 @@ class TotalSchwarzschildLoss:
         self.einstein_multiplier = self.einstein_multiplier_base
         self.kretschmann_multiplier = self.kretschmann_multiplier_base
         self.r2_det_loss_multiplier = self.r2_det_loss_multiplier_base
-        self.speciality_index_multiplier = self.speciality_index_multiplier_base
         self.killing_symmetry_multiplier = self.killing_symmetry_multiplier_base
         self.k_repeller_multiplier = self.k_repeller_multiplier_base
         self.speciality_index_rprofile_multiplier = (
@@ -1450,7 +1376,6 @@ class TotalSchwarzschildLoss:
             abs(self.einstein_multiplier)
             + abs(self.kretschmann_multiplier)
             + abs(self.r2_det_loss_multiplier)
-            + abs(self.speciality_index_multiplier)
             + abs(self.killing_symmetry_multiplier)
             + abs(self.k_repeller_multiplier)
             + abs(self.speciality_index_rprofile_multiplier)
@@ -1458,8 +1383,8 @@ class TotalSchwarzschildLoss:
             + abs(self.trapped_surface_multiplier)
             > 0.0
         ), (
-            "All loss terms (einstein, kretschmann, r2_det, speciality_index, "
-            "killing_symmetry, k_repeller, speciality_index_rprofile, horizon_anchor, "
+            "All loss terms (einstein, kretschmann, r2_det, killing_symmetry, "
+            "k_repeller, speciality_index_rprofile, horizon_anchor, "
             "trapped_surface) are turned off."
         )
 
@@ -1469,7 +1394,6 @@ class TotalSchwarzschildLoss:
         self.einstein_loss = EinsteinLossEmbed(config, weighter)
         self.kretschmann_loss = KretschmannLossEmbed(config, weighter)
         self.r2_det_loss = R2DetFinitenessLoss(config, weighter)
-        self.speciality_index_loss = SpecialityIndexLossEmbed(config, weighter)
         self.killing_symmetry_loss = KillingSymmetryLossEmbed(config, weighter)
         self.k_repeller_loss = KRepellerLoss(config, weighter)
         self.speciality_index_rprofile_loss = SpecialityIndexRProfileLoss(
@@ -1497,7 +1421,6 @@ class TotalSchwarzschildLoss:
         self.einstein_scheduler = None
         self.kretschmann_scheduler = None
         self.r2_det_scheduler = None
-        self.speciality_index_scheduler = None
         self.killing_symmetry_scheduler = None
         self.k_repeller_scheduler = None
         self.speciality_index_rprofile_scheduler = None
@@ -1532,16 +1455,6 @@ class TotalSchwarzschildLoss:
                 warmup_epochs=self.config.loss.r2_det_schedule.warmup_epochs,
                 decay_rate=self.config.loss.r2_det_schedule.decay_rate,
                 steps=self.config.loss.r2_det_schedule.steps,
-            )
-
-        if self.config.loss.speciality_index_schedule is not None:
-            self.speciality_index_scheduler = FloatScheduler(
-                strategy=self.config.loss.speciality_index_schedule.strategy,
-                init_value=self.speciality_index_multiplier_base,
-                final_value=self.config.loss.speciality_index_schedule.final_value,
-                warmup_epochs=self.config.loss.speciality_index_schedule.warmup_epochs,
-                decay_rate=self.config.loss.speciality_index_schedule.decay_rate,
-                steps=self.config.loss.speciality_index_schedule.steps,
             )
 
         if self.config.loss.killing_symmetry_schedule is not None:
@@ -1606,11 +1519,6 @@ class TotalSchwarzschildLoss:
 
         if self.r2_det_scheduler is not None:
             self.r2_det_loss_multiplier = self.r2_det_scheduler.get(epoch, total_epochs)
-
-        if self.speciality_index_scheduler is not None:
-            self.speciality_index_multiplier = self.speciality_index_scheduler.get(
-                epoch, total_epochs
-            )
 
         if self.killing_symmetry_scheduler is not None:
             self.killing_symmetry_multiplier = self.killing_symmetry_scheduler.get(
@@ -1685,8 +1593,7 @@ class TotalSchwarzschildLoss:
             in ("weyl_invariant", "weyl_invariant_volume", "weyl_invariant_alt")
         )
         need_speciality_index = (
-            self.speciality_index_multiplier > 0.0
-            or self.speciality_index_rprofile_multiplier > 0.0
+            self.speciality_index_rprofile_multiplier > 0.0
             or kretschmann_needs_weyl
             or einstein_needs_weyl
             or horizon_needs_weyl
@@ -1840,14 +1747,6 @@ class TotalSchwarzschildLoss:
         else:
             r2_det_loss = tf.cast(0.0, tf.float64)
 
-        # Speciality-index S=1 type-D loss
-        if self.speciality_index_multiplier > 0.0:
-            s_loss = self.speciality_index_loss.compute_from_precomputed(
-                x_vars, weyl_i, weyl_j, metric_pred_mat
-            )
-        else:
-            s_loss = tf.cast(0.0, tf.float64)
-
         # SO(3) spherical-symmetry loss.
         if self.killing_symmetry_multiplier > 0.0:
             killing_loss = self.killing_symmetry_loss.compute_from_precomputed(
@@ -1896,14 +1795,12 @@ class TotalSchwarzschildLoss:
                 "Einstein:       {:.3g}\n"
                 "Kretschmann:    {:.3g}\n"
                 "R2DetBarrier:   {:.3g}\n"
-                "SpecialityIdx:  {:.3g}\n"
                 "KillingSym:     {:.3g}\n"
                 "K-Repeller:     {:.3g}\n"
                 "S-RProfile:     {:.3g}\n".format(
                     tf.get_static_value(e_loss),
                     tf.get_static_value(k_loss),
                     tf.get_static_value(r2_det_loss),
-                    tf.get_static_value(s_loss),
                     tf.get_static_value(killing_loss),
                     tf.get_static_value(kr_loss),
                     tf.get_static_value(srp_loss),
@@ -1915,8 +1812,8 @@ class TotalSchwarzschildLoss:
                 _speciality_index_summary(
                     weyl_i,
                     weyl_j,
-                    self.speciality_index_loss._WEYL_FLOOR,
-                    self.speciality_index_loss._EPS_WEYL,
+                    self.speciality_index_rprofile_loss._WEYL_FLOOR,
+                    self.speciality_index_rprofile_loss._EPS_WEYL,
                 )
                 if weyl_i is not None and weyl_j is not None
                 else {}
@@ -1926,7 +1823,6 @@ class TotalSchwarzschildLoss:
                 "einstein_loss": tf.get_static_value(e_loss),
                 "kretschmann_loss": tf.get_static_value(k_loss),
                 "r2_det_loss": tf.get_static_value(r2_det_loss),
-                "speciality_index_loss": tf.get_static_value(s_loss),
                 "killing_symmetry_loss": tf.get_static_value(killing_loss),
                 "k_repeller_loss": tf.get_static_value(kr_loss),
                 "speciality_index_rprofile_loss": tf.get_static_value(srp_loss),
@@ -1949,9 +1845,6 @@ class TotalSchwarzschildLoss:
         if self.r2_det_loss_multiplier > 0.0:
             total_loss += self.r2_det_loss_multiplier * tf.math.abs(r2_det_loss)
             norm_denom += self.r2_det_loss_multiplier
-        if self.speciality_index_multiplier > 0.0:
-            total_loss += self.speciality_index_multiplier * tf.math.abs(s_loss)
-            norm_denom += self.speciality_index_multiplier
         if self.killing_symmetry_multiplier > 0.0:
             total_loss += self.killing_symmetry_multiplier * tf.math.abs(killing_loss)
             norm_denom += self.killing_symmetry_multiplier

@@ -48,10 +48,20 @@ class LossConfig(BaseModel, KerasSerialisableObject):
     overlap_multiplier: float = 1.0
     finiteness_multiplier: float = 1.0
 
-    # Optional schedulers for each multiplier (None = no scheduling)
+    # Optional schedulers for each multiplier (None = no scheduling).
+    # Keep the full schedule surface here so hyperparameter files can use one
+    # consistent loss schedule block across experiments. Specialised losses only
+    # read the schedules that apply to their supported terms.
     einstein_schedule: FloatScheduleConfig | None = None
     overlap_schedule: FloatScheduleConfig | None = None
     finiteness_schedule: FloatScheduleConfig | None = None
+    kretschmann_schedule: FloatScheduleConfig | None = None
+    r2_det_schedule: FloatScheduleConfig | None = None
+    killing_symmetry_schedule: FloatScheduleConfig | None = None
+    k_repeller_schedule: FloatScheduleConfig | None = None
+    speciality_index_rprofile_schedule: FloatScheduleConfig | None = None
+    horizon_anchor_schedule: FloatScheduleConfig | None = None
+    trapped_surface_schedule: FloatScheduleConfig | None = None
 
 
 class FinitenessConfig(BaseModel, KerasSerialisableObject):
@@ -63,7 +73,7 @@ class FinitenessConfig(BaseModel, KerasSerialisableObject):
 
 
 class ModelConfig(BaseModel, KerasSerialisableObject):
-    experiment: Literal["sphere", "schwarzschild", "lens"] = "sphere"
+    experiment: Literal["sphere", "blackhole", "schwarzschild", "lens"] = "sphere"
     saved_model: bool = False
     saved_model_path: Optional[str] = None
     saved_model_weight_noise: float = 0.0

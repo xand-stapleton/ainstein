@@ -90,7 +90,7 @@ def main():
     experiment_name = (
         config_yaml.get("experiment")
         or config_yaml.get("model", {}).get("experiment")
-        or "schwarzschild"
+        or "blackhole"
     )
 
     match experiment_name.lower():
@@ -106,8 +106,8 @@ def main():
                 wandb_id=wandb_id,
             )
 
-        case "schwarzschild":
-            print("Running Schwarzschild experiment...")
+        case "blackhole" | "schwarzschild":
+            print("Running blackhole experiment...")
             from runtime.schwarzschild import SchwarzschildTrainerRunner
 
             runner = SchwarzschildTrainerRunner(
