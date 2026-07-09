@@ -39,5 +39,15 @@ Jupyter notebooks, with naming conventions of `examine_output.ipynb` plus the re
     pages = "025001",
     year = "2025"
 }
+@article{SchettiniGherardini:2026bdb,
+    author = "Hirst, Edward and Schettini Gherardini, Tancredi and Stapleton, Alexander George",
+    title = "{Black Hole Black Boxes: Numerical Black Hole Metrics via AInstein Neural Networks}",
+    eprint = "2607.05489",
+    archivePrefix = "arXiv",
+    primaryClass = "gr-qc",
+    reportNumber = "MPIM-Bonn-2026",
+    month = "7",
+    year = "2026"
+}
 ```
 
