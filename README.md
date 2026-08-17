@@ -23,6 +23,8 @@ The package functionality is split according to: the model in `network/`, the lo
 A jupyter notebook `examine_output.ipynb` is provided which provides the testing functionality, and allows interactive visualisation of the trained models. Ensure the local filepath to the trained models is set correctly and follow internal instructions to set up the testing.   
 
 ## BibTeX Citation
+
+To cite AInstein for spheres...
 ``` 
 @article{Hirst:2025seh,
     author = "Hirst, Edward and Gherardini, Tancredi Schettini and Stapleton, Alexander G.",
@@ -31,12 +33,20 @@ A jupyter notebook `examine_output.ipynb` is provided which provides the testing
     archivePrefix = "arXiv",
     primaryClass = "hep-th",
     reportNumber = "QMUL-PH-25-04",
-    doi = "10.1088/3050-287X/ae1117",
-    journal = "AI Sci.",
-    volume = "1",
-    number = "2",
-    pages = "025001",
+    month = "2",
     year = "2025"
 }
 ```
-
+...whilst for black holes:
+```
+@article{SchettiniGherardini:2026bdb,
+    author = "Schettini Gherardini, Tancredi and Hirst, Edward and Stapleton, Alexander George",
+    title = "{Black Hole Black Boxes: Numerical Black Hole Metrics via AInstein Neural Networks}",
+    eprint = "2607.05489",
+    archivePrefix = "arXiv",
+    primaryClass = "gr-qc",
+    reportNumber = "MPIM-Bonn-2026",
+    month = "7",
+    year = "2026"
+}
+```
